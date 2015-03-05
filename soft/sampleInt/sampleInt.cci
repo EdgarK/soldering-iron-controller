@@ -1,0 +1,13 @@
+VERSION:3 SOURCE_TIMESTAMP:4666035D
+NODE:I LEVEL:0 LINE:23 "C:\cvavr2\inc\tiny2313.h"
+NODE:I LEVEL:0 LINE:24 "C:\cvavr2\inc\delay.h"
+NODE:V LEVEL:0 LINE:26 "pwm1 -> EEPROM:????"
+NODE:V LEVEL:0 LINE:28 "delay -> R2,R3"
+NODE:V LEVEL:0 LINE:29 "prevPins -> R5"
+NODE:F LEVEL:0 LINE:31 "transmit(unsigned char data)"
+NODE:F LEVEL:0 LINE:36 "transmitInt(int data)"
+NODE:F LEVEL:0 LINE:59 "pwmChanged(void)"
+NODE:F LEVEL:0 LINE:68 "incDelay(void)"
+NODE:F LEVEL:0 LINE:76 "decDelay(void)"
+NODE:F LEVEL:0 LINE:84 "pin_change_isr0(void)"
+NODE:F LEVEL:0 LINE:123 "main(void)"

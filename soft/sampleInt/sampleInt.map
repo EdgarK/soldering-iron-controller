@@ -1,0 +1,14 @@
+RAM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+
+EEPROM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+pwm1                                                              0000h        1
+
+Register Allocation
+Variable                                                          Register  Size
+--------------------------------------------------------------------------------
+delay                                                             R2,R3        2
+prevPins                                                          R5           1
