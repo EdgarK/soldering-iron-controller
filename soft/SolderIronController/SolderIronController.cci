@@ -1,0 +1,4 @@
+VERSION:3 SOURCE_TIMESTAMP:4669B072
+NODE:I LEVEL:0 LINE:23 "C:\cvavr2\inc\tiny2313.h"
+NODE:F LEVEL:0 LINE:26 "pin_change_isr0(void)"
+NODE:F LEVEL:0 LINE:34 "main(void)"
