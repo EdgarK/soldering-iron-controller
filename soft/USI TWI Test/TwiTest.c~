@@ -24,10 +24,10 @@ Data Stack size         : 32
 #include <stdint.h>
 
 #define _BV(bit)    (1 << (bit)) 
-//#define USI_TWI_BUFFER_SIZE 16
-enum{
-    USI_TWI_BUFFER_SIZE = 32
-};
+#define USI_TWI_BUFFER_SIZE 16
+//enum{
+//    USI_TWI_BUFFER_SIZE = 32
+//};
 #ifndef NULL
     #define NULL 0
 #endif
@@ -69,14 +69,6 @@ static uint8_t	input_buffer_length;
 static uint8_t	output_buffer[USI_TWI_BUFFER_SIZE];
 static uint8_t	output_buffer_length;
 static uint8_t	output_buffer_current;
-static uint8_t	stats_enabled;
-static uint16_t	start_conditions_count;
-static uint16_t	stop_conditions_count;
-static uint16_t	error_conditions_count;
-static uint16_t	overflow_conditions_count;
-static uint16_t	local_frames_count;
-static uint16_t	idle_call_count;
-
 
 static	uint8_t	*phy_send_buffer;
 static	uint8_t	*phy_send_buffer_length;
@@ -172,15 +164,9 @@ interrupt [USI_STRT] void usi_start_isr(void){
     // sda = high scl = high break stop condition       
     if((PIN_USI & _BV(PIN_USI_SDA))){ // stop condition
         twi_reset();
-        if(stats_enabled){
-            error_conditions_count++;
-        }
         return;
     }     
-    
-    if(stats_enabled){
-        start_conditions_count++;
-    }        
+            
     of_state = of_state_check_address;
     ss_state = ss_state_after_start;
     USIDR = 0xff;
@@ -204,10 +190,7 @@ interrupt [USI_OVERFLOW] void usi_ovf_isr(void){
     // bit shift register overflow condition occured
     // scl forced low until overflow condition is cleared!
     uint8_t data = USIDR;
-    uint8_t set_counter = 0x00; // send 8 bits (16 edges)
-    if(stats_enabled){
-        overflow_conditions_count++;
-    }          
+    uint8_t set_counter = 0x00; // send 8 bits (16 edges)          
 again:
     switch(of_state){
     // start condition occured and succeed
@@ -315,9 +298,6 @@ void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_call
     for(;;){
         if(idle_callback){
             idle_callback();
-            if(stats_enabled){
-                idle_call_count++;
-            }
         }                                                    
         
         if(use_sleep && (ss_state == ss_state_before_start)){
@@ -326,9 +306,6 @@ void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_call
         
         if(USISR & _BV(USIPF)){
             #asm("cli")
-            if(stats_enabled){
-                stop_conditions_count++;
-            }
             USISR |= _BV(USIPF); // clear stop condition flag
             switch(ss_state){
                 case(ss_state_after_start):{
@@ -336,10 +313,7 @@ void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_call
                     break;
                 }
                 
-                case(ss_state_data_processed):{
-                    if(stats_enabled){
-                        local_frames_count++;
-                    }
+                case(ss_state_data_processed):{                    
                     call_datacallback = 1;
                     break;
                 }
@@ -357,34 +331,6 @@ void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_call
     }
 }
 
-void usi_twi_enable_stats(uint8_t onoff){
-    stats_enabled = onoff;
-    start_conditions_count = 0;
-    stop_conditions_count = 0;
-    error_conditions_count = 0;
-    overflow_conditions_count = 0;
-    local_frames_count = 0;
-    idle_call_count = 0;
-}
-
-uint16_t usi_twi_stats_start_conditions(void){
-    return(start_conditions_count);
-}
-uint16_t usi_twi_stats_stop_conditions(void){
-    return(stop_conditions_count);
-}
-uint16_t usi_twi_stats_error_conditions(void){
-    return(error_conditions_count);
-}
-uint16_t usi_twi_stats_overflow_conditions(void){
-    return(overflow_conditions_count);
-}
-uint16_t usi_twi_stats_local_frames(void){
-    return(local_frames_count);
-}
-uint16_t usi_twi_stats_idle_calls(void){
-    return(idle_call_count);
-}
 
 void transmit(char data){
     while(!(UCSRA & (1 << UDRE))){}
@@ -418,8 +364,8 @@ static void reply(uint8_t error_code, uint8_t reply_length, const uint8_t *reply
     if((reply_length + 4) > phy_buffer_size){
         return;                              
     }
-    phy_send_buffer[0] = 3 + reply_length;
-    phy_send_buffer[1] = error_code;
+    //phy_send_buffer[0] = 3 + reply_length;
+    //phy_send_buffer[1] = error_code;
    // phy_send_buffer[2] = input_byte;
     for(ix = 0; ix < reply_length; ix++){
         phy_send_buffer[3 + ix] = reply_string[ix];
@@ -427,8 +373,9 @@ static void reply(uint8_t error_code, uint8_t reply_length, const uint8_t *reply
     for(ix = 1, checksum = 0; ix < (3 + reply_length); ix++){
         checksum += phy_send_buffer[ix];
     }
-    phy_send_buffer[3 + reply_length] = checksum;
-    *phy_send_buffer_length = 3 + reply_length + 1;
+    //phy_send_buffer[3 + reply_length] = checksum;
+    //*phy_send_buffer_length = 3 + reply_length + 1;
+    *phy_send_buffer_length = 1;
 }
 
 static void reply_char(uint8_t value){
@@ -458,11 +405,11 @@ static void my_twi_callback(uint8_t input_buffer_length, const uint8_t *input_bu
                         //transmit(0);
                         //transmit(0);
                                                 
-                        
-                        //output_buffer_length = &l;
+                        *output_buffer_length = l;
+                        output_buffer[0] = 5;
                         //output_buffer = &b;
-                        reply_char(8);
-                        return();
+                        //reply_char(12);
+                        //return;
                         //return(reply(0,0,0));
 }
 

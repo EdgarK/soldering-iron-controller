@@ -6,20 +6,13 @@ data_callback                                                     0082h        2
 of_state                                                          0084h        1
 ss_state                                                          0085h        1
 slave_address                                                     0086h        1
-input_buffer                                                      0087h       32
-input_buffer_length                                               00A7h        1
-output_buffer                                                     00A8h       32
-output_buffer_length                                              00C8h        1
-output_buffer_current                                             00C9h        1
-stats_enabled                                                     00CAh        1
-start_conditions_count                                            00CBh        2
-stop_conditions_count                                             00CDh        2
-error_conditions_count                                            00CFh        2
-overflow_conditions_count                                         00D1h        2
-local_frames_count                                                00D3h        2
-idle_call_count                                                   00D5h        2
-phy_send_buffer                                                   00D7h        1
-phy_send_buffer_length                                            00D8h        1
+input_buffer                                                      0087h       16
+input_buffer_length                                               0097h        1
+output_buffer                                                     0098h       16
+output_buffer_length                                              00A8h        1
+output_buffer_current                                             00A9h        1
+phy_send_buffer                                                   00AAh        1
+phy_send_buffer_length                                            00ABh        1
 
 EEPROM Allocation
 Variable                                                          Address   Size
