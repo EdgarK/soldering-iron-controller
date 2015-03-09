@@ -39,188 +39,848 @@
 	#endif
 ;PCODE: $00000008 VOL: 0
 ;PCODE: $00000009 VOL: 0
+;#include <stdint.h>
+;#include <ui.c>
+;typedef unsigned char ui8;
+;typedef unsigned short ui16;
+;typedef unsigned long ui32;
 ;
-;// Pin change 0-7 interrupt service routine
-;interrupt [PC_INT] void pin_change_isr0(void)
-; 0000 001B {
+;#include <generalCompatabilityDefinitions.c>
+;#define _BV(bit)    (1 << (bit))
+;
+;#ifndef NULL
+;    #define NULL 0
+;#endif
+;#include <twiOverUsi.c>
+;# define USI_TWI_BUFFER_SIZE 16
+;
+;//******chrystal dependent part******//
+;# define DDR_USI    DDRB
+;# define PORT_USI    PORTB
+;# define PIN_USI    PINB
+;# define PORT_USI_SDA    PINB5
+;# define PORT_USI_SCL    PINB7
+;# define PIN_USI_SDA    PINB5
+;# define PIN_USI_SCL    PINB7
+;
+;//******theoretically chrystal independent part******//
+;enum{
+;    of_state_check_address,
+;    of_state_send_data,
+;    of_state_request_ack,
+;    of_state_check_ack,
+;    of_state_receive_data,
+;    of_state_store_data_and_send_ack
+;} overflow_state_t;
+;
+;enum{
+;    ss_state_before_start,
+;    ss_state_after_start,
+;    ss_state_address_selected,
+;    ss_state_address_not_selected,
+;    ss_state_data_processed
+;} startstop_state_t;
+;
+;
+;static void (*idle_callback)(void);
+;static void    (*data_callback)(uint8_t input_buffer_length, const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer);
+;
+;static uint8_t of_state;
+;static uint8_t ss_state;
+;static uint8_t    slave_address;
+;static uint8_t    input_buffer[USI_TWI_BUFFER_SIZE];
+;static uint8_t    input_buffer_length;
+;static uint8_t    output_buffer[USI_TWI_BUFFER_SIZE];
+;static uint8_t    output_buffer_length;
+;static uint8_t    output_buffer_current;
+;
+;//static    uint8_t    *phy_send_buffer;
+;//static    uint8_t    *phy_send_buffer_length;
+;enum{
+;    phy_buffer_size = USI_TWI_BUFFER_SIZE
+;};
+;
+;
+;
+;
+;static void set_sda_to_input(void){
+; 0000 001C static void set_sda_to_input(void){
 
 	.CSEG
 ;PCODE: $0000000A VOL: 0
 ;PCODE: $0000000B VOL: 0
-; 0000 001C // Place your code here
-; 0000 001D 
-; 0000 001E }
+;    DDR_USI &= ~_BV(PORT_USI_SDA);
 ;PCODE: $0000000C VOL: 0
 ;PCODE: $0000000D VOL: 0
+;}
 ;PCODE: $0000000E VOL: 0
+;PCODE: $0000000F VOL: 0
+;static void set_sda_to_output(void){
+;PCODE: $00000010 VOL: 0
+;PCODE: $00000011 VOL: 0
+;    DDR_USI |= _BV(PORT_USI_SDA);
+;PCODE: $00000012 VOL: 0
+;PCODE: $00000013 VOL: 0
+;}
+;PCODE: $00000014 VOL: 0
+;PCODE: $00000015 VOL: 0
+;static inline void set_scl_to_input(void){
+;PCODE: $00000016 VOL: 0
+;PCODE: $00000017 VOL: 0
+;    DDR_USI &= ~_BV(PORT_USI_SCL);
+;PCODE: $00000018 VOL: 0
+;PCODE: $00000019 VOL: 0
+;}
+;PCODE: $0000001A VOL: 0
+;PCODE: $0000001B VOL: 0
+;static inline void set_scl_to_output(void){
+;PCODE: $0000001C VOL: 0
+;PCODE: $0000001D VOL: 0
+;    DDR_USI |= _BV(PORT_USI_SCL);
+;PCODE: $0000001E VOL: 0
+;PCODE: $0000001F VOL: 0
+;}
+;PCODE: $00000020 VOL: 0
+;PCODE: $00000021 VOL: 0
+;static inline void set_sda_low(void){
+;PCODE: $00000022 VOL: 0
+;PCODE: $00000023 VOL: 0
+;    PORT_USI &= ~_BV(PORT_USI_SDA);
+;PCODE: $00000024 VOL: 0
+;PCODE: $00000025 VOL: 0
+;}
+;PCODE: $00000026 VOL: 0
+;PCODE: $00000027 VOL: 0
+;static inline void set_sda_high(void){
+;PCODE: $00000028 VOL: 0
+;PCODE: $00000029 VOL: 0
+;    PORT_USI |= _BV(PORT_USI_SDA);
+;PCODE: $0000002A VOL: 0
+;PCODE: $0000002B VOL: 0
+;}
+;PCODE: $0000002C VOL: 0
+;PCODE: $0000002D VOL: 0
+;static inline void set_scl_low(void){
+;PCODE: $0000002E VOL: 0
+;PCODE: $0000002F VOL: 0
+;    PORT_USI &= ~_BV(PORT_USI_SCL);
+;PCODE: $00000030 VOL: 0
+;PCODE: $00000031 VOL: 0
+;}
+;PCODE: $00000032 VOL: 0
+;PCODE: $00000033 VOL: 0
+;static inline void set_scl_high(void){
+;PCODE: $00000034 VOL: 0
+;PCODE: $00000035 VOL: 0
+;    PORT_USI |= _BV(PORT_USI_SCL);
+;PCODE: $00000036 VOL: 0
+;PCODE: $00000037 VOL: 0
+;}
+;PCODE: $00000038 VOL: 0
+;PCODE: $00000039 VOL: 0
+;
+;static inline void twi_reset_state(void){
+;PCODE: $0000003A VOL: 0
+;PCODE: $0000003B VOL: 0
+;    USISR =
+;            (1	<< USISIF) | // clear start condition flag
+;            (1	<< USIOIF) | // clear overflow condition flag
+;            (0	<< USIPF) | // !clear stop condition flag
+;            (1	<< USIDC) | // clear arbitration error flag
+;            (0x00 << USICNT0); // set counter to "8" bits
+;PCODE: $0000003C VOL: 0
+;PCODE: $0000003D VOL: 0
+;    USICR =
+;            (1 << USISIE) | // enable start condition interrupt
+;            (0 << USIOIE) | // !enable overflow interrupt
+;            (1 << USIWM1) | (0 << USIWM0) | // set usi in two-wire mode, disable bit counter overflow hold
+;            (1 << USICS1) | (0 << USICS0) | (0 << USICLK) | // shift register clock source = external, positive edge, 4-bit counter source = external, both edges
+;            (0 << USITC); // don't toggle clock-port pin
+;PCODE: $0000003E VOL: 0
+;PCODE: $0000003F VOL: 0
+;}
+;PCODE: $00000040 VOL: 0
+;PCODE: $00000041 VOL: 0
+;
+;static void twi_reset(void){
+;PCODE: $00000042 VOL: 0
+;PCODE: $00000043 VOL: 0
+;// make sure no sda/scl remains pulled up or down
+;    set_sda_to_input(); // deactivate internal pullup on sda/scl
+;PCODE: $00000044 VOL: 0
+;    set_sda_low();
+;PCODE: $00000045 VOL: 0
+;    set_scl_to_input();
+;PCODE: $00000046 VOL: 0
+;    set_scl_low();
+;PCODE: $00000047 VOL: 0
+;    set_sda_to_output(); // release (set high) on sda/scl
+;PCODE: $00000048 VOL: 0
+;    set_sda_high();
+;PCODE: $00000049 VOL: 0
+;    set_sda_to_input();
+;PCODE: $0000004A VOL: 0
+;    set_sda_high();
+;PCODE: $0000004B VOL: 0
+;    set_scl_to_output();
+;PCODE: $0000004C VOL: 0
+;    set_scl_high();
+;PCODE: $0000004D VOL: 0
+;    twi_reset_state();
+;PCODE: $0000004E VOL: 0
+;}
+;PCODE: $0000004F VOL: 0
+;PCODE: $00000050 VOL: 0
+;
+;static inline void twi_init(void)
+;{
+;PCODE: $00000051 VOL: 0
+;PCODE: $00000052 VOL: 0
+;    #if defined(USIPP)
+;        #if defined(USI_ON_PORT_A)
+;            USIPP |= _BV(USIPOS);
+;        #else
+;            USIPP &= ~_BV(USIPOS);
+;        # endif
+;    #endif
+;    twi_reset();
+;PCODE: $00000053 VOL: 0
+;}
+;PCODE: $00000054 VOL: 0
+;PCODE: $00000055 VOL: 0
+;
+;
+;// USI start condition interrupt service routine
+;interrupt [USI_STRT] void usi_start_isr(void){
+;PCODE: $00000056 VOL: 0
+;PCODE: $00000057 VOL: 0
+;    set_sda_to_input();
+;PCODE: $00000058 VOL: 0
+;    // wait for SCL to go low to ensure the start condition has completed (the
+;    // start detector will hold SCL low) - if a stop condition arises then leave
+;    // the interrupt to prevent waiting forever - don't use USISR to test for stop
+;    // condition as in Application Note AVR312 because the stop condition Flag is
+;    // going to be set from the last TWI sequence
+;    while(!(PIN_USI & _BV(PIN_USI_SDA)) && (PIN_USI & _BV(PIN_USI_SCL))){}
+;PCODE: $00000059 VOL: 0
+;PCODE: $0000005A VOL: 0
+;PCODE: $0000005B VOL: 0
+;PCODE: $0000005C VOL: 0
+;PCODE: $0000005D VOL: 0
+;PCODE: $0000005E VOL: 0
+;PCODE: $0000005F VOL: 0
+;PCODE: $00000060 VOL: 0
+;PCODE: $00000061 VOL: 0
+;PCODE: $00000062 VOL: 0
+;PCODE: $00000063 VOL: 0
+;PCODE: $00000064 VOL: 0
+;PCODE: $00000065 VOL: 0
+;    // possible combinations
+;    // sda = low scl = low break start condition
+;    // sda = low scl = high loop
+;    // sda = high scl = low break stop condition
+;    // sda = high scl = high break stop condition
+;    if((PIN_USI & _BV(PIN_USI_SDA))){ // stop condition
+;PCODE: $00000066 VOL: 0
+;PCODE: $00000067 VOL: 0
+;PCODE: $00000068 VOL: 0
+;        twi_reset();
+;PCODE: $00000069 VOL: 0
+;        return;
+;PCODE: $0000006A VOL: 0
+;PCODE: $0000006B VOL: 0
+;    }
+;
+;    of_state = of_state_check_address;
+;PCODE: $0000006C VOL: 0
+;PCODE: $0000006D VOL: 0
+;PCODE: $0000006E VOL: 0
+;    ss_state = ss_state_after_start;
+;PCODE: $0000006F VOL: 0
+;PCODE: $00000070 VOL: 0
+;    USIDR = 0xff;
+;PCODE: $00000071 VOL: 0
+;PCODE: $00000072 VOL: 0
+;    USICR =
+;            (1 << USISIE) | // enable start condition interrupt
+;            (1 << USIOIE) | // enable overflow interrupt
+;            (1 << USIWM1) | (1 << USIWM0) | // set usi in two-wire mode, enable bit counter overflow hold
+;            (1 << USICS1) | (0 << USICS0) | (0 << USICLK) | // shift register clock source = external, positive edge, 4-bit counter source = external, both edges
+;            (0 << USITC); // don't toggle clock-port pin
+;PCODE: $00000073 VOL: 0
+;PCODE: $00000074 VOL: 0
+;    USISR =
+;            (1    << USISIF) | // clear start condition flag
+;            (1    << USIOIF) | // clear overflow condition flag
+;            (0    << USIPF) | // !clear stop condition flag
+;            (1    << USIDC) | // clear arbitration error flag
+;            (0x00 << USICNT0); // set counter to "8" bits
+;PCODE: $00000075 VOL: 0
+;PCODE: $00000076 VOL: 0
+;}
+;PCODE: $00000077 VOL: 0
+;PCODE: $00000078 VOL: 0
+;PCODE: $00000079 VOL: 0
+;
+;
+;// USI counter overflow interrupt service routine
+;interrupt [USI_OVERFLOW] void usi_ovf_isr(void){
+;PCODE: $0000007A VOL: 0
+;PCODE: $0000007B VOL: 0
+;    // bit shift register overflow condition occured
+;    // scl forced low until overflow condition is cleared!
+;    uint8_t data = USIDR;
+;    uint8_t set_counter = 0x00; // send 8 bits (16 edges)
+;again:
+;PCODE: $0000007C VOL: 0
+;	data -> R17
+;	set_counter -> R16
+;PCODE: $0000007D VOL: 0
+;PCODE: $0000007E VOL: 0
+;PCODE: $0000007F VOL: 0
+;PCODE: $00000080 VOL: 0
+;PCODE: $00000081 VOL: 0
+;    switch(of_state){
+;PCODE: $00000082 VOL: 0
+;PCODE: $00000083 VOL: 0
+;    // start condition occured and succeed
+;    // check address, if not OK, reset usi
+;    // note: not using general call address
+;        case(of_state_check_address):{
+;PCODE: $00000084 VOL: 0
+;PCODE: $00000085 VOL: 0
+;            uint8_t address;
+;            uint8_t direction;
+;            direction = data & 0x01;
+;PCODE: $00000086 VOL: 0
+;	address -> Y+1
+;	direction -> Y+0
+;PCODE: $00000087 VOL: 0
+;PCODE: $00000088 VOL: 0
+;PCODE: $00000089 VOL: 0
+;            address = (data & 0xfe) >> 1;
+;PCODE: $0000008A VOL: 0
+;PCODE: $0000008B VOL: 0
+;PCODE: $0000008C VOL: 0
+;PCODE: $0000008D VOL: 0
+;PCODE: $0000008E VOL: 0
+;            if(address == slave_address){
+;PCODE: $0000008F VOL: 0
+;PCODE: $00000090 VOL: 0
+;PCODE: $00000091 VOL: 0
+;PCODE: $00000092 VOL: 0
+;                ss_state = ss_state_address_selected;
+;PCODE: $00000093 VOL: 0
+;PCODE: $00000094 VOL: 0
+;                if(direction){ // read request from master
+;PCODE: $00000095 VOL: 0
+;PCODE: $00000096 VOL: 0
+;PCODE: $00000097 VOL: 0
+;                    of_state = of_state_send_data;
+;PCODE: $00000098 VOL: 0
+;PCODE: $00000099 VOL: 0
+;                }else{    // write request from master
+;PCODE: $0000009A VOL: 0
+;PCODE: $0000009B VOL: 0
+;                    of_state = of_state_receive_data;
+;PCODE: $0000009C VOL: 0
+;PCODE: $0000009D VOL: 0
+;                }
+;PCODE: $0000009E VOL: 0
+;                USIDR = 0x00;
+;PCODE: $0000009F VOL: 0
+;PCODE: $000000A0 VOL: 0
+;                set_counter = 0x0e; // send 1 bit (2 edges)
+;PCODE: $000000A1 VOL: 0
+;PCODE: $000000A2 VOL: 0
+;                set_sda_to_output(); // initiate send ack
+;PCODE: $000000A3 VOL: 0
+;            }else{
+;PCODE: $000000A4 VOL: 0
+;PCODE: $000000A5 VOL: 0
+;                USIDR = 0x00;
+;PCODE: $000000A6 VOL: 0
+;PCODE: $000000A7 VOL: 0
+;                set_counter = 0x00;
+;PCODE: $000000A8 VOL: 0
+;PCODE: $000000A9 VOL: 0
+;                twi_reset_state();
+;PCODE: $000000AA VOL: 0
+;                ss_state = ss_state_address_not_selected;
+;PCODE: $000000AB VOL: 0
+;PCODE: $000000AC VOL: 0
+;            }
+;PCODE: $000000AD VOL: 0
+;            break;
+;PCODE: $000000AE VOL: 0
+;PCODE: $000000AF VOL: 0
+;        }
+;        // process read request from master
+;        case(of_state_send_data):{
+;PCODE: $000000B0 VOL: 0
+;PCODE: $000000B1 VOL: 0
+;PCODE: $000000B2 VOL: 0
+;            ss_state = ss_state_data_processed;
+;PCODE: $000000B3 VOL: 0
+;PCODE: $000000B4 VOL: 0
+;            of_state = of_state_request_ack;
+;PCODE: $000000B5 VOL: 0
+;PCODE: $000000B6 VOL: 0
+;            if(output_buffer_current < output_buffer_length){
+;PCODE: $000000B7 VOL: 0
+;PCODE: $000000B8 VOL: 0
+;PCODE: $000000B9 VOL: 0
+;PCODE: $000000BA VOL: 0
+;                USIDR = output_buffer[output_buffer_current++];
+;PCODE: $000000BB VOL: 0
+;PCODE: $000000BC VOL: 0
+;PCODE: $000000BD VOL: 0
+;PCODE: $000000BE VOL: 0
+;PCODE: $000000BF VOL: 0
+;PCODE: $000000C0 VOL: 0
+;PCODE: $000000C1 VOL: 0
+;            }else{
+;PCODE: $000000C2 VOL: 0
+;PCODE: $000000C3 VOL: 0
+;                USIDR = 0x00; // no more data, but cannot send "nothing" or "nak"
+;PCODE: $000000C4 VOL: 0
+;PCODE: $000000C5 VOL: 0
+;            }
+;PCODE: $000000C6 VOL: 0
+;            set_counter = 0x00;
+;PCODE: $000000C7 VOL: 0
+;PCODE: $000000C8 VOL: 0
+;            set_sda_to_output(); // initiate send data
+;PCODE: $000000C9 VOL: 0
+;            break;
+;PCODE: $000000CA VOL: 0
+;        }
+;        // data sent to master, request ack (or nack) from master
+;        case(of_state_request_ack):{
+;PCODE: $000000CB VOL: 0
+;PCODE: $000000CC VOL: 0
+;PCODE: $000000CD VOL: 0
+;            of_state = of_state_check_ack;
+;PCODE: $000000CE VOL: 0
+;PCODE: $000000CF VOL: 0
+;            USIDR = 0x00;
+;PCODE: $000000D0 VOL: 0
+;PCODE: $000000D1 VOL: 0
+;            set_counter = 0x0e; // receive 1 bit (2 edges)
+;PCODE: $000000D2 VOL: 0
+;PCODE: $000000D3 VOL: 0
+;            set_sda_to_input(); // initiate receive ack
+;PCODE: $000000D4 VOL: 0
+;            break;
+;PCODE: $000000D5 VOL: 0
+;        }
+;        // ack/nack from master received
+;        case(of_state_check_ack):{
+;PCODE: $000000D6 VOL: 0
+;PCODE: $000000D7 VOL: 0
+;PCODE: $000000D8 VOL: 0
+;            if(data){ // if NACK, the master does not want more data
+;PCODE: $000000D9 VOL: 0
+;PCODE: $000000DA VOL: 0
+;                of_state = of_state_check_address;
+;PCODE: $000000DB VOL: 0
+;PCODE: $000000DC VOL: 0
+;                set_counter = 0x00;
+;PCODE: $000000DD VOL: 0
+;PCODE: $000000DE VOL: 0
+;                twi_reset();
+;PCODE: $000000DF VOL: 0
+;            }else{
+;PCODE: $000000E0 VOL: 0
+;PCODE: $000000E1 VOL: 0
+;                of_state = of_state_send_data;
+;PCODE: $000000E2 VOL: 0
+;PCODE: $000000E3 VOL: 0
+;                goto again; // from here we just drop straight into state_send_data
+;PCODE: $000000E4 VOL: 0
+;            } // don't wait for another overflow interrupt
+;PCODE: $000000E5 VOL: 0
+;            break;
+;PCODE: $000000E6 VOL: 0
+;        }
+;        // process write request from master
+;        case(of_state_receive_data):{
+;PCODE: $000000E7 VOL: 0
+;PCODE: $000000E8 VOL: 0
+;PCODE: $000000E9 VOL: 0
+;            ss_state = ss_state_data_processed;
+;PCODE: $000000EA VOL: 0
+;PCODE: $000000EB VOL: 0
+;            of_state = of_state_store_data_and_send_ack;
+;PCODE: $000000EC VOL: 0
+;PCODE: $000000ED VOL: 0
+;            set_counter = 0x00; // receive 1 bit (2 edges)
+;PCODE: $000000EE VOL: 0
+;PCODE: $000000EF VOL: 0
+;            set_sda_to_input(); // initiate receive data
+;PCODE: $000000F0 VOL: 0
+;            break;
+;PCODE: $000000F1 VOL: 0
+;        }
+;        // data received from master, store it and wait for more data
+;        case(of_state_store_data_and_send_ack):{
+;PCODE: $000000F2 VOL: 0
+;PCODE: $000000F3 VOL: 0
+;PCODE: $000000F4 VOL: 0
+;            of_state = of_state_receive_data;
+;PCODE: $000000F5 VOL: 0
+;PCODE: $000000F6 VOL: 0
+;            if(input_buffer_length < (USI_TWI_BUFFER_SIZE - 1)){
+;PCODE: $000000F7 VOL: 0
+;PCODE: $000000F8 VOL: 0
+;PCODE: $000000F9 VOL: 0
+;                input_buffer[input_buffer_length++] = data;
+;PCODE: $000000FA VOL: 0
+;PCODE: $000000FB VOL: 0
+;PCODE: $000000FC VOL: 0
+;PCODE: $000000FD VOL: 0
+;PCODE: $000000FE VOL: 0
+;PCODE: $000000FF VOL: 0
+;            }
+;            USIDR = 0x00;
+;PCODE: $00000100 VOL: 0
+;PCODE: $00000101 VOL: 0
+;PCODE: $00000102 VOL: 0
+;            set_counter = 0x0e; // send 1 bit (2 edges)
+;PCODE: $00000103 VOL: 0
+;PCODE: $00000104 VOL: 0
+;            set_sda_to_output(); // initiate send ack
+;PCODE: $00000105 VOL: 0
+;            break;
+;PCODE: $00000106 VOL: 0
+;        }
+;    }
+;PCODE: $00000107 VOL: 0
+;    USISR =
+;            (0	<< USISIF) | // don't clear start condition flag
+;            (1	<< USIOIF) | // clear overflow condition flag
+;            (0	<< USIPF) | // don't clear stop condition flag
+;            (1	<< USIDC) | // clear arbitration error flag
+;            (set_counter << USICNT0); // set counter to 8 or 1 bits
+;PCODE: $00000108 VOL: 0
+;PCODE: $00000109 VOL: 0
+;PCODE: $0000010A VOL: 0
+;}
+;PCODE: $0000010B VOL: 0
+;PCODE: $0000010C VOL: 0
+;PCODE: $0000010D VOL: 0
+;PCODE: $0000010E VOL: 0
+;
+;void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_callback_in)(uint8_t input_buffer_length,
+;                    const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer),void (*idle_callback_in)(void)){
+;PCODE: $0000010F VOL: 0
+;PCODE: $00000110 VOL: 0
+;    uint8_t	call_datacallback = 0;
+;    slave_address = slave_address_in;
+;PCODE: $00000111 VOL: 0
+;	slave_address_in -> Y+6
+;	use_sleep -> Y+5
+;	*data_callback_in -> Y+3
+;	*idle_callback_in -> Y+1
+;	call_datacallback -> R17
+;PCODE: $00000112 VOL: 0
+;PCODE: $00000113 VOL: 0
+;PCODE: $00000114 VOL: 0
+;PCODE: $00000115 VOL: 0
+;    data_callback = data_callback_in;
+;PCODE: $00000116 VOL: 0
+;PCODE: $00000117 VOL: 0
+;    idle_callback = idle_callback_in;
+;PCODE: $00000118 VOL: 0
+;PCODE: $00000119 VOL: 0
+;    input_buffer_length = 0;
+;PCODE: $0000011A VOL: 0
+;PCODE: $0000011B VOL: 0
+;    output_buffer_length = 0;
+;PCODE: $0000011C VOL: 0
+;PCODE: $0000011D VOL: 0
+;    output_buffer_current = 0;
+;PCODE: $0000011E VOL: 0
+;PCODE: $0000011F VOL: 0
+;    ss_state = ss_state_before_start;
+;PCODE: $00000120 VOL: 0
+;PCODE: $00000121 VOL: 0
+;//    if(use_sleep){
+;//        set_sleep_mode(SLEEP_MODE_IDLE);
+;//    }
+;    twi_init();
+;PCODE: $00000122 VOL: 0
+;    #asm("sei")
+;PCODE: $00000123 VOL: 0
+	sei
+;PCODE: $00000124 VOL: 0
+;    for(;;){
+;PCODE: $00000125 VOL: 0
+;PCODE: $00000126 VOL: 0
+;        if(idle_callback){
+;PCODE: $00000127 VOL: 0
+;PCODE: $00000128 VOL: 0
+;PCODE: $00000129 VOL: 0
+;PCODE: $0000012A VOL: 0
+;PCODE: $0000012B VOL: 0
+;            idle_callback();
+;PCODE: $0000012C VOL: 0
+;PCODE: $0000012D VOL: 0
+;PCODE: $0000012E VOL: 0
+;PCODE: $0000012F VOL: 0
+;        }
+;
+;        if(use_sleep && (ss_state == ss_state_before_start)){
+;PCODE: $00000130 VOL: 0
+;PCODE: $00000131 VOL: 0
+;PCODE: $00000132 VOL: 0
+;PCODE: $00000133 VOL: 0
+;PCODE: $00000134 VOL: 0
+;PCODE: $00000135 VOL: 0
+;PCODE: $00000136 VOL: 0
+;PCODE: $00000137 VOL: 0
+;PCODE: $00000138 VOL: 0
+;PCODE: $00000139 VOL: 0
+;PCODE: $0000013A VOL: 0
+;            //sleep_mode();
+;        }
+;
+;        if(USISR & _BV(USIPF)){
+;PCODE: $0000013B VOL: 0
+;PCODE: $0000013C VOL: 0
+;PCODE: $0000013D VOL: 0
+;PCODE: $0000013E VOL: 0
+;            #asm("cli")
+;PCODE: $0000013F VOL: 0
+	cli
+;PCODE: $00000140 VOL: 0
+;            USISR |= _BV(USIPF); // clear stop condition flag
+;PCODE: $00000141 VOL: 0
+;PCODE: $00000142 VOL: 0
+;            switch(ss_state){
+;PCODE: $00000143 VOL: 0
+;PCODE: $00000144 VOL: 0
+;                case(ss_state_after_start):{
+;PCODE: $00000145 VOL: 0
+;PCODE: $00000146 VOL: 0
+;                    twi_reset();
+;PCODE: $00000147 VOL: 0
+;                    break;
+;PCODE: $00000148 VOL: 0
+;                }
+;
+;                case(ss_state_data_processed):{
+;PCODE: $00000149 VOL: 0
+;PCODE: $0000014A VOL: 0
+;PCODE: $0000014B VOL: 0
+;                    call_datacallback = 1;
+;PCODE: $0000014C VOL: 0
+;PCODE: $0000014D VOL: 0
+;                    break;
+;PCODE: $0000014E VOL: 0
+;                }
+;            }
+;PCODE: $0000014F VOL: 0
+;            ss_state = ss_state_before_start;
+;PCODE: $00000150 VOL: 0
+;PCODE: $00000151 VOL: 0
+;            #asm("sei")
+;PCODE: $00000152 VOL: 0
+	sei
+;PCODE: $00000153 VOL: 0
+;        }
+;        if(call_datacallback){
+;PCODE: $00000154 VOL: 0
+;PCODE: $00000155 VOL: 0
+;PCODE: $00000156 VOL: 0
+;            output_buffer_length = 0;
+;PCODE: $00000157 VOL: 0
+;PCODE: $00000158 VOL: 0
+;            output_buffer_current = 0;
+;PCODE: $00000159 VOL: 0
+;PCODE: $0000015A VOL: 0
+;            data_callback(input_buffer_length, input_buffer, &output_buffer_length, output_buffer);
+;PCODE: $0000015B VOL: 0
+;PCODE: $0000015C VOL: 0
+;PCODE: $0000015D VOL: 0
+;PCODE: $0000015E VOL: 0
+;PCODE: $0000015F VOL: 0
+;PCODE: $00000160 VOL: 0
+;PCODE: $00000161 VOL: 0
+;PCODE: $00000162 VOL: 0
+;PCODE: $00000163 VOL: 0
+;PCODE: $00000164 VOL: 0
+;PCODE: $00000165 VOL: 0
+;PCODE: $00000166 VOL: 0
+;PCODE: $00000167 VOL: 0
+;PCODE: $00000168 VOL: 0
+;            input_buffer_length = 0;
+;PCODE: $00000169 VOL: 0
+;PCODE: $0000016A VOL: 0
+;            call_datacallback = 0;
+;PCODE: $0000016B VOL: 0
+;PCODE: $0000016C VOL: 0
+;        }
+;    }
+;PCODE: $0000016D VOL: 0
+;PCODE: $0000016E VOL: 0
+;PCODE: $0000016F VOL: 0
+;PCODE: $00000170 VOL: 0
+;}
+;PCODE: $00000171 VOL: 0
+;PCODE: $00000172 VOL: 0
+;PCODE: $00000173 VOL: 0
+;PCODE: $00000174 VOL: 0
+;PCODE: $00000175 VOL: 0
+;
+;#include <configuration.c>
+;
+;static void configure(void){
+; 0000 001E static void configure(void){
+;PCODE: $00000176 VOL: 0
+;PCODE: $00000177 VOL: 0
+;    // Input/Output Ports initialization
+;    // Port A initialization
+;    // Func2=In Func1=Out Func0=Out
+;    // State2=T State1=0 State0=0
+;    PORTA=0x00;
+;PCODE: $00000178 VOL: 0
+;PCODE: $00000179 VOL: 0
+;    DDRA=0x03;
+;PCODE: $0000017A VOL: 0
+;PCODE: $0000017B VOL: 0
+;
+;    // Port B initialization
+;    // Func7=In Func6=In Func5=In Func4=In Func3=In Func2=Out Func1=In Func0=In
+;    // State7=T State6=P State5=T State4=P State3=P State2=0 State1=P State0=P
+;    PORTB=0x5B;
+;PCODE: $0000017C VOL: 0
+;PCODE: $0000017D VOL: 0
+;    DDRB=0x04;
+;PCODE: $0000017E VOL: 0
+;PCODE: $0000017F VOL: 0
+;
+;    // Port D initialization
+;    // Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out
+;    // State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0
+;    PORTD=0x00;
+;PCODE: $00000180 VOL: 0
+;PCODE: $00000181 VOL: 0
+;    DDRD=0x7F;
+;PCODE: $00000182 VOL: 0
+;PCODE: $00000183 VOL: 0
+;
+;    // Timer/Counter 0 initialization
+;    // Clock source: System Clock
+;    // Clock value: 31.250 kHz
+;    // Mode: Fast PWM top=FFh
+;    // OC0A output: Non-Inverted PWM
+;    // OC0B output: Non-Inverted PWM
+;    TCCR0A=0xA3;
+;PCODE: $00000184 VOL: 0
+;PCODE: $00000185 VOL: 0
+;    TCCR0B=0x04;
+;PCODE: $00000186 VOL: 0
+;PCODE: $00000187 VOL: 0
+;    OCR0B=OCR0A=TCNT0=0x00;
+;PCODE: $00000188 VOL: 0
+;PCODE: $00000189 VOL: 0
+;PCODE: $0000018A VOL: 0
+;PCODE: $0000018B VOL: 0
+;
+;    // Clock value: Timer1 Stopped
+;    OCR1BL=OCR1BH=OCR1AL=OCR1AH=ICR1L=ICR1H=TCNT1L=TCNT1H=TCCR1B=TCCR1A=0x00;
+;PCODE: $0000018C VOL: 0
+;PCODE: $0000018D VOL: 0
+;PCODE: $0000018E VOL: 0
+;PCODE: $0000018F VOL: 0
+;PCODE: $00000190 VOL: 0
+;PCODE: $00000191 VOL: 0
+;PCODE: $00000192 VOL: 0
+;PCODE: $00000193 VOL: 0
+;PCODE: $00000194 VOL: 0
+;PCODE: $00000195 VOL: 0
+;PCODE: $00000196 VOL: 0
+;
+;    // External Interrupt(s) initialization
+;    // INT0: Off
+;    // INT1: Off
+;    // Interrupt on any change on pins PCINT0-7: On
+;    GIMSK=0x20;
+;PCODE: $00000197 VOL: 0
+;PCODE: $00000198 VOL: 0
+;    MCUCR=0x00;
+;PCODE: $00000199 VOL: 0
+;PCODE: $0000019A VOL: 0
+;    PCMSK=0x5B;
+;PCODE: $0000019B VOL: 0
+;PCODE: $0000019C VOL: 0
+;    EIFR=0x20;
+;PCODE: $0000019D VOL: 0
+;PCODE: $0000019E VOL: 0
+;
+;    // Timer(s)/Counter(s) Interrupt(s) initialization
+;    TIMSK=0x00;
+;PCODE: $0000019F VOL: 0
+;PCODE: $000001A0 VOL: 0
+;
+;    // Analog Comparator: Off
+;    ACSR=0x80;
+;PCODE: $000001A1 VOL: 0
+;PCODE: $000001A2 VOL: 0
+;}
+;PCODE: $000001A3 VOL: 0
+;PCODE: $000001A4 VOL: 0
+;
+;
+;// Pin change 0-7 interrupt service routine
+;interrupt [PC_INT] void pin_change_isr0(void)
+; 0000 0022 {
+;PCODE: $000001A5 VOL: 0
+;PCODE: $000001A6 VOL: 0
+; 0000 0023 // Place your code here
+; 0000 0024 
+; 0000 0025 }
+;PCODE: $000001A7 VOL: 0
+;PCODE: $000001A8 VOL: 0
+;PCODE: $000001A9 VOL: 0
 ;
 ;// Declare your global variables here
 ;
 ;void main(void)
-; 0000 0023 {
-;PCODE: $0000000F VOL: 0
-; 0000 0024 // Declare your local variables here
-; 0000 0025 
-; 0000 0026 // Crystal Oscillator division factor: 1
-; 0000 0027 #pragma optsize-
-; 0000 0028 CLKPR=0x80;
-;PCODE: $00000010 VOL: 0
-;PCODE: $00000011 VOL: 0
-; 0000 0029 CLKPR=0x00;
-;PCODE: $00000012 VOL: 0
-;PCODE: $00000013 VOL: 0
-; 0000 002A #ifdef _OPTIMIZE_SIZE_
-; 0000 002B #pragma optsize+
-; 0000 002C #endif
-; 0000 002D 
-; 0000 002E // Input/Output Ports initialization
-; 0000 002F // Port A initialization
-; 0000 0030 // Func2=In Func1=Out Func0=Out
-; 0000 0031 // State2=T State1=0 State0=0
-; 0000 0032 PORTA=0x00;
-;PCODE: $00000014 VOL: 0
-;PCODE: $00000015 VOL: 0
-; 0000 0033 DDRA=0x03;
-;PCODE: $00000016 VOL: 0
-;PCODE: $00000017 VOL: 0
+; 0000 002A {
+;PCODE: $000001AA VOL: 0
+; 0000 002B // Declare your local variables here
+; 0000 002C 
+; 0000 002D // Crystal Oscillator division factor: 1
+; 0000 002E #pragma optsize-
+; 0000 002F CLKPR=0x80;
+;PCODE: $000001AB VOL: 0
+;PCODE: $000001AC VOL: 0
+; 0000 0030 CLKPR=0x00;
+;PCODE: $000001AD VOL: 0
+;PCODE: $000001AE VOL: 0
+; 0000 0031 #ifdef _OPTIMIZE_SIZE_
+; 0000 0032 #pragma optsize+
+; 0000 0033 #endif
 ; 0000 0034 
-; 0000 0035 // Port B initialization
-; 0000 0036 // Func7=In Func6=In Func5=In Func4=In Func3=In Func2=Out Func1=In Func0=In
-; 0000 0037 // State7=T State6=P State5=T State4=P State3=P State2=0 State1=P State0=P
-; 0000 0038 PORTB=0x5B;
-;PCODE: $00000018 VOL: 0
-;PCODE: $00000019 VOL: 0
-; 0000 0039 DDRB=0x04;
-;PCODE: $0000001A VOL: 0
-;PCODE: $0000001B VOL: 0
-; 0000 003A 
-; 0000 003B // Port D initialization
-; 0000 003C // Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out
-; 0000 003D // State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0
-; 0000 003E PORTD=0x00;
-;PCODE: $0000001C VOL: 0
-;PCODE: $0000001D VOL: 0
-; 0000 003F DDRD=0x7F;
-;PCODE: $0000001E VOL: 0
-;PCODE: $0000001F VOL: 0
-; 0000 0040 
-; 0000 0041 // Timer/Counter 0 initialization
-; 0000 0042 // Clock source: System Clock
-; 0000 0043 // Clock value: 31.250 kHz
-; 0000 0044 // Mode: Fast PWM top=FFh
-; 0000 0045 // OC0A output: Non-Inverted PWM
-; 0000 0046 // OC0B output: Non-Inverted PWM
-; 0000 0047 TCCR0A=0xA3;
-;PCODE: $00000020 VOL: 0
-;PCODE: $00000021 VOL: 0
-; 0000 0048 TCCR0B=0x04;
-;PCODE: $00000022 VOL: 0
-;PCODE: $00000023 VOL: 0
-; 0000 0049 TCNT0=0x00;
-;PCODE: $00000024 VOL: 0
-;PCODE: $00000025 VOL: 0
-; 0000 004A OCR0A=0x00;
-;PCODE: $00000026 VOL: 0
-;PCODE: $00000027 VOL: 0
-; 0000 004B OCR0B=0x00;
-;PCODE: $00000028 VOL: 0
-;PCODE: $00000029 VOL: 0
-; 0000 004C 
-; 0000 004D // Timer/Counter 1 initialization
-; 0000 004E // Clock source: System Clock
-; 0000 004F // Clock value: Timer1 Stopped
-; 0000 0050 // Mode: Normal top=FFFFh
-; 0000 0051 // OC1A output: Discon.
-; 0000 0052 // OC1B output: Discon.
-; 0000 0053 // Noise Canceler: Off
-; 0000 0054 // Input Capture on Falling Edge
-; 0000 0055 // Timer1 Overflow Interrupt: Off
-; 0000 0056 // Input Capture Interrupt: Off
-; 0000 0057 // Compare A Match Interrupt: Off
-; 0000 0058 // Compare B Match Interrupt: Off
-; 0000 0059 TCCR1A=0x00;
-;PCODE: $0000002A VOL: 0
-;PCODE: $0000002B VOL: 0
-; 0000 005A TCCR1B=0x00;
-;PCODE: $0000002C VOL: 0
-;PCODE: $0000002D VOL: 0
-; 0000 005B TCNT1H=0x00;
-;PCODE: $0000002E VOL: 0
-;PCODE: $0000002F VOL: 0
-; 0000 005C TCNT1L=0x00;
-;PCODE: $00000030 VOL: 0
-;PCODE: $00000031 VOL: 0
-; 0000 005D ICR1H=0x00;
-;PCODE: $00000032 VOL: 0
-;PCODE: $00000033 VOL: 0
-; 0000 005E ICR1L=0x00;
-;PCODE: $00000034 VOL: 0
-;PCODE: $00000035 VOL: 0
-; 0000 005F OCR1AH=0x00;
-;PCODE: $00000036 VOL: 0
-;PCODE: $00000037 VOL: 0
-; 0000 0060 OCR1AL=0x00;
-;PCODE: $00000038 VOL: 0
-;PCODE: $00000039 VOL: 0
-; 0000 0061 OCR1BH=0x00;
-;PCODE: $0000003A VOL: 0
-;PCODE: $0000003B VOL: 0
-; 0000 0062 OCR1BL=0x00;
-;PCODE: $0000003C VOL: 0
-;PCODE: $0000003D VOL: 0
-; 0000 0063 
-; 0000 0064 // External Interrupt(s) initialization
-; 0000 0065 // INT0: Off
-; 0000 0066 // INT1: Off
-; 0000 0067 // Interrupt on any change on pins PCINT0-7: On
-; 0000 0068 GIMSK=0x20;
-;PCODE: $0000003E VOL: 0
-;PCODE: $0000003F VOL: 0
-; 0000 0069 MCUCR=0x00;
-;PCODE: $00000040 VOL: 0
-;PCODE: $00000041 VOL: 0
-; 0000 006A PCMSK=0x5B;
-;PCODE: $00000042 VOL: 0
-;PCODE: $00000043 VOL: 0
-; 0000 006B EIFR=0x20;
-;PCODE: $00000044 VOL: 0
-;PCODE: $00000045 VOL: 0
-; 0000 006C 
-; 0000 006D // Timer(s)/Counter(s) Interrupt(s) initialization
-; 0000 006E TIMSK=0x00;
-;PCODE: $00000046 VOL: 0
-;PCODE: $00000047 VOL: 0
-; 0000 006F 
-; 0000 0070 // Universal Serial Interface initialization
-; 0000 0071 // Mode: Disabled
-; 0000 0072 // Clock source: Register & Counter=no clk.
-; 0000 0073 // USI Counter Overflow Interrupt: Off
-; 0000 0074 USICR=0x00;
-;PCODE: $00000048 VOL: 0
-;PCODE: $00000049 VOL: 0
-; 0000 0075 
-; 0000 0076 // Analog Comparator initialization
-; 0000 0077 // Analog Comparator: Off
-; 0000 0078 // Analog Comparator Input Capture by Timer/Counter 1: Off
-; 0000 0079 ACSR=0x80;
-;PCODE: $0000004A VOL: 0
-;PCODE: $0000004B VOL: 0
-; 0000 007A 
-; 0000 007B // Global enable interrupts
-; 0000 007C #asm("sei")
-;PCODE: $0000004C VOL: 0
+; 0000 0035 configure();
+;PCODE: $000001AF VOL: 0
+; 0000 0036 // Global enable interrupts
+; 0000 0037 #asm("sei")
+;PCODE: $000001B0 VOL: 0
 	sei
-;PCODE: $0000004D VOL: 0
-; 0000 007D 
-; 0000 007E while (1)
-;PCODE: $0000004E VOL: 0
-; 0000 007F       {
-; 0000 0080       // Place your code here
-; 0000 0081 
-; 0000 0082       };
-;PCODE: $0000004F VOL: 0
-;PCODE: $00000050 VOL: 0
-; 0000 0083 }
-;PCODE: $00000051 VOL: 0
-;PCODE: $00000052 VOL: 0
-;PCODE: $00000053 VOL: 0
+;PCODE: $000001B1 VOL: 0
+; 0000 0038 
+; 0000 0039 while (1)
+;PCODE: $000001B2 VOL: 0
+; 0000 003A       {
+; 0000 003B       // Place your code here
+; 0000 003C 
+; 0000 003D       };
+;PCODE: $000001B3 VOL: 0
+;PCODE: $000001B4 VOL: 0
+; 0000 003E }
+;PCODE: $000001B5 VOL: 0
+;PCODE: $000001B6 VOL: 0
+;PCODE: $000001B7 VOL: 0

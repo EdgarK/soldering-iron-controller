@@ -951,6 +951,10 @@ __DELAY_USW_LOOP:
 	ST   X,R23
 	.ENDM
 
+;NAME DEFINITIONS FOR GLOBAL VARIABLES ALLOCATED TO REGISTERS
+	.DEF _overflow_state_t=R3
+	.DEF _startstop_state_t=R2
+
 	.CSEG
 	.ORG 0x00
 
@@ -970,8 +974,8 @@ __DELAY_USW_LOOP:
 	RJMP 0x00
 	RJMP 0x00
 	RJMP 0x00
-	RJMP 0x00
-	RJMP 0x00
+	RJMP _usi_start_isr
+	RJMP _usi_ovf_isr
 	RJMP 0x00
 	RJMP 0x00
 
@@ -1058,173 +1062,770 @@ __CLEAR_SRAM:
 	.EQU __sm_standby=0x40
 	.SET power_ctrl_reg=mcucr
 	#endif
+;#include <stdint.h>
+;#include <ui.c>
+;typedef unsigned char ui8;
+;typedef unsigned short ui16;
+;typedef unsigned long ui32;
+;
+;#include <generalCompatabilityDefinitions.c>
+;#define _BV(bit)    (1 << (bit))
+;
+;#ifndef NULL
+;    #define NULL 0
+;#endif
+;#include <twiOverUsi.c>
+;# define USI_TWI_BUFFER_SIZE 16
+;
+;//******chrystal dependent part******//
+;# define DDR_USI    DDRB
+;# define PORT_USI    PORTB
+;# define PIN_USI    PINB
+;# define PORT_USI_SDA    PINB5
+;# define PORT_USI_SCL    PINB7
+;# define PIN_USI_SDA    PINB5
+;# define PIN_USI_SCL    PINB7
+;
+;//******theoretically chrystal independent part******//
+;enum{
+;    of_state_check_address,
+;    of_state_send_data,
+;    of_state_request_ack,
+;    of_state_check_ack,
+;    of_state_receive_data,
+;    of_state_store_data_and_send_ack
+;} overflow_state_t;
+;
+;enum{
+;    ss_state_before_start,
+;    ss_state_after_start,
+;    ss_state_address_selected,
+;    ss_state_address_not_selected,
+;    ss_state_data_processed
+;} startstop_state_t;
+;
+;
+;static void (*idle_callback)(void);
+;static void    (*data_callback)(uint8_t input_buffer_length, const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer);
+;
+;static uint8_t of_state;
+;static uint8_t ss_state;
+;static uint8_t    slave_address;
+;static uint8_t    input_buffer[USI_TWI_BUFFER_SIZE];
+;static uint8_t    input_buffer_length;
+;static uint8_t    output_buffer[USI_TWI_BUFFER_SIZE];
+;static uint8_t    output_buffer_length;
+;static uint8_t    output_buffer_current;
+;
+;//static    uint8_t    *phy_send_buffer;
+;//static    uint8_t    *phy_send_buffer_length;
+;enum{
+;    phy_buffer_size = USI_TWI_BUFFER_SIZE
+;};
+;
+;
+;
+;
+;static void set_sda_to_input(void){
+; 0000 001C static void set_sda_to_input(void){
+
+	.CSEG
+_set_sda_to_input_G000:
+;    DDR_USI &= ~_BV(PORT_USI_SDA);
+	CBI  0x17,5
+;}
+	RET
+;static void set_sda_to_output(void){
+_set_sda_to_output_G000:
+;    DDR_USI |= _BV(PORT_USI_SDA);
+	SBI  0x17,5
+;}
+	RET
+;static inline void set_scl_to_input(void){
+_set_scl_to_input_G000:
+;    DDR_USI &= ~_BV(PORT_USI_SCL);
+	CBI  0x17,7
+;}
+	RET
+;static inline void set_scl_to_output(void){
+_set_scl_to_output_G000:
+;    DDR_USI |= _BV(PORT_USI_SCL);
+	SBI  0x17,7
+;}
+	RET
+;static inline void set_sda_low(void){
+_set_sda_low_G000:
+;    PORT_USI &= ~_BV(PORT_USI_SDA);
+	CBI  0x18,5
+;}
+	RET
+;static inline void set_sda_high(void){
+_set_sda_high_G000:
+;    PORT_USI |= _BV(PORT_USI_SDA);
+	SBI  0x18,5
+;}
+	RET
+;static inline void set_scl_low(void){
+_set_scl_low_G000:
+;    PORT_USI &= ~_BV(PORT_USI_SCL);
+	CBI  0x18,7
+;}
+	RET
+;static inline void set_scl_high(void){
+_set_scl_high_G000:
+;    PORT_USI |= _BV(PORT_USI_SCL);
+	SBI  0x18,7
+;}
+	RET
+;
+;static inline void twi_reset_state(void){
+_twi_reset_state_G000:
+;    USISR =
+;            (1	<< USISIF) | // clear start condition flag
+;            (1	<< USIOIF) | // clear overflow condition flag
+;            (0	<< USIPF) | // !clear stop condition flag
+;            (1	<< USIDC) | // clear arbitration error flag
+;            (0x00 << USICNT0); // set counter to "8" bits
+	LDI  R30,LOW(208)
+	OUT  0xE,R30
+;    USICR =
+;            (1 << USISIE) | // enable start condition interrupt
+;            (0 << USIOIE) | // !enable overflow interrupt
+;            (1 << USIWM1) | (0 << USIWM0) | // set usi in two-wire mode, disable bit counter overflow hold
+;            (1 << USICS1) | (0 << USICS0) | (0 << USICLK) | // shift register clock source = external, positive edge, 4-bit counter source = external, both edges
+;            (0 << USITC); // don't toggle clock-port pin
+	LDI  R30,LOW(168)
+	OUT  0xD,R30
+;}
+	RET
+;
+;static void twi_reset(void){
+_twi_reset_G000:
+;// make sure no sda/scl remains pulled up or down
+;    set_sda_to_input(); // deactivate internal pullup on sda/scl
+	RCALL _set_sda_to_input_G000
+;    set_sda_low();
+	RCALL _set_sda_low_G000
+;    set_scl_to_input();
+	RCALL _set_scl_to_input_G000
+;    set_scl_low();
+	RCALL _set_scl_low_G000
+;    set_sda_to_output(); // release (set high) on sda/scl
+	RCALL _set_sda_to_output_G000
+;    set_sda_high();
+	RCALL _set_sda_high_G000
+;    set_sda_to_input();
+	RCALL _set_sda_to_input_G000
+;    set_sda_high();
+	RCALL _set_sda_high_G000
+;    set_scl_to_output();
+	RCALL _set_scl_to_output_G000
+;    set_scl_high();
+	RCALL _set_scl_high_G000
+;    twi_reset_state();
+	RCALL _twi_reset_state_G000
+;}
+	RET
+;
+;static inline void twi_init(void)
+;{
+;    #if defined(USIPP)
+;        #if defined(USI_ON_PORT_A)
+;            USIPP |= _BV(USIPOS);
+;        #else
+;            USIPP &= ~_BV(USIPOS);
+;        # endif
+;    #endif
+;    twi_reset();
+;}
+;
+;
+;// USI start condition interrupt service routine
+;interrupt [USI_STRT] void usi_start_isr(void){
+_usi_start_isr:
+	RCALL SUBOPT_0x0
+;    set_sda_to_input();
+	RCALL _set_sda_to_input_G000
+;    // wait for SCL to go low to ensure the start condition has completed (the
+;    // start detector will hold SCL low) - if a stop condition arises then leave
+;    // the interrupt to prevent waiting forever - don't use USISR to test for stop
+;    // condition as in Application Note AVR312 because the stop condition Flag is
+;    // going to be set from the last TWI sequence
+;    while(!(PIN_USI & _BV(PIN_USI_SDA)) && (PIN_USI & _BV(PIN_USI_SCL))){}
+_0x3:
+	SBIC 0x16,5
+	RJMP _0x6
+	SBIC 0x16,7
+	RJMP _0x7
+_0x6:
+	RJMP _0x5
+_0x7:
+	RJMP _0x3
+_0x5:
+;    // possible combinations
+;    // sda = low scl = low break start condition
+;    // sda = low scl = high loop
+;    // sda = high scl = low break stop condition
+;    // sda = high scl = high break stop condition
+;    if((PIN_USI & _BV(PIN_USI_SDA))){ // stop condition
+	SBIS 0x16,5
+	RJMP _0x8
+;        twi_reset();
+	RCALL _twi_reset_G000
+;        return;
+	RJMP _0x31
+;    }
+;
+;    of_state = of_state_check_address;
+_0x8:
+	LDI  R30,LOW(0)
+	RCALL SUBOPT_0x1
+;    ss_state = ss_state_after_start;
+	LDI  R30,LOW(1)
+	RCALL SUBOPT_0x2
+;    USIDR = 0xff;
+	LDI  R30,LOW(255)
+	OUT  0xF,R30
+;    USICR =
+;            (1 << USISIE) | // enable start condition interrupt
+;            (1 << USIOIE) | // enable overflow interrupt
+;            (1 << USIWM1) | (1 << USIWM0) | // set usi in two-wire mode, enable bit counter overflow hold
+;            (1 << USICS1) | (0 << USICS0) | (0 << USICLK) | // shift register clock source = external, positive edge, 4-bit counter source = external, both edges
+;            (0 << USITC); // don't toggle clock-port pin
+	LDI  R30,LOW(248)
+	OUT  0xD,R30
+;    USISR =
+;            (1    << USISIF) | // clear start condition flag
+;            (1    << USIOIF) | // clear overflow condition flag
+;            (0    << USIPF) | // !clear stop condition flag
+;            (1    << USIDC) | // clear arbitration error flag
+;            (0x00 << USICNT0); // set counter to "8" bits
+	LDI  R30,LOW(208)
+	OUT  0xE,R30
+;}
+	RJMP _0x31
+;
+;
+;// USI counter overflow interrupt service routine
+;interrupt [USI_OVERFLOW] void usi_ovf_isr(void){
+_usi_ovf_isr:
+	RCALL SUBOPT_0x0
+;    // bit shift register overflow condition occured
+;    // scl forced low until overflow condition is cleared!
+;    uint8_t data = USIDR;
+;    uint8_t set_counter = 0x00; // send 8 bits (16 edges)
+;again:
+	RCALL __SAVELOCR2
+;	data -> R17
+;	set_counter -> R16
+	IN   R17,15
+	LDI  R16,0
+_0x9:
+;    switch(of_state){
+	LDS  R30,_of_state_G000
+	LDI  R31,0
+;    // start condition occured and succeed
+;    // check address, if not OK, reset usi
+;    // note: not using general call address
+;        case(of_state_check_address):{
+	SBIW R30,0
+	BRNE _0xD
+;            uint8_t address;
+;            uint8_t direction;
+;            direction = data & 0x01;
+	SBIW R28,2
+;	address -> Y+1
+;	direction -> Y+0
+	MOV  R30,R17
+	ANDI R30,LOW(0x1)
+	ST   Y,R30
+;            address = (data & 0xfe) >> 1;
+	MOV  R30,R17
+	ANDI R30,0xFE
+	LDI  R31,0
+	ASR  R31
+	ROR  R30
+	STD  Y+1,R30
+;            if(address == slave_address){
+	LDS  R30,_slave_address_G000
+	LDD  R26,Y+1
+	CP   R30,R26
+	BRNE _0xE
+;                ss_state = ss_state_address_selected;
+	LDI  R30,LOW(2)
+	RCALL SUBOPT_0x2
+;                if(direction){ // read request from master
+	LD   R30,Y
+	CPI  R30,0
+	BREQ _0xF
+;                    of_state = of_state_send_data;
+	LDI  R30,LOW(1)
+	RJMP _0x2E
+;                }else{    // write request from master
+_0xF:
+;                    of_state = of_state_receive_data;
+	LDI  R30,LOW(4)
+_0x2E:
+	STS  _of_state_G000,R30
+;                }
+;                USIDR = 0x00;
+	RCALL SUBOPT_0x3
+;                set_counter = 0x0e; // send 1 bit (2 edges)
+	LDI  R16,LOW(14)
+;                set_sda_to_output(); // initiate send ack
+	RCALL _set_sda_to_output_G000
+;            }else{
+	RJMP _0x11
+_0xE:
+;                USIDR = 0x00;
+	RCALL SUBOPT_0x3
+;                set_counter = 0x00;
+	LDI  R16,LOW(0)
+;                twi_reset_state();
+	RCALL _twi_reset_state_G000
+;                ss_state = ss_state_address_not_selected;
+	LDI  R30,LOW(3)
+	RCALL SUBOPT_0x2
+;            }
+_0x11:
+;            break;
+	ADIW R28,2
+	RJMP _0xC
+;        }
+;        // process read request from master
+;        case(of_state_send_data):{
+_0xD:
+	CPI  R30,LOW(0x1)
+	LDI  R26,HIGH(0x1)
+	CPC  R31,R26
+	BRNE _0x12
+;            ss_state = ss_state_data_processed;
+	LDI  R30,LOW(4)
+	RCALL SUBOPT_0x2
+;            of_state = of_state_request_ack;
+	LDI  R30,LOW(2)
+	RCALL SUBOPT_0x1
+;            if(output_buffer_current < output_buffer_length){
+	LDS  R30,_output_buffer_length_G000
+	LDS  R26,_output_buffer_current_G000
+	CP   R26,R30
+	BRSH _0x13
+;                USIDR = output_buffer[output_buffer_current++];
+	LDS  R30,_output_buffer_current_G000
+	SUBI R30,-LOW(1)
+	STS  _output_buffer_current_G000,R30
+	SUBI R30,LOW(1)
+	SUBI R30,-LOW(_output_buffer_G000)
+	LD   R30,Z
+	RJMP _0x2F
+;            }else{
+_0x13:
+;                USIDR = 0x00; // no more data, but cannot send "nothing" or "nak"
+	LDI  R30,LOW(0)
+_0x2F:
+	OUT  0xF,R30
+;            }
+;            set_counter = 0x00;
+	LDI  R16,LOW(0)
+;            set_sda_to_output(); // initiate send data
+	RJMP _0x30
+;            break;
+;        }
+;        // data sent to master, request ack (or nack) from master
+;        case(of_state_request_ack):{
+_0x12:
+	CPI  R30,LOW(0x2)
+	LDI  R26,HIGH(0x2)
+	CPC  R31,R26
+	BRNE _0x15
+;            of_state = of_state_check_ack;
+	LDI  R30,LOW(3)
+	RCALL SUBOPT_0x1
+;            USIDR = 0x00;
+	RCALL SUBOPT_0x3
+;            set_counter = 0x0e; // receive 1 bit (2 edges)
+	LDI  R16,LOW(14)
+;            set_sda_to_input(); // initiate receive ack
+	RCALL _set_sda_to_input_G000
+;            break;
+	RJMP _0xC
+;        }
+;        // ack/nack from master received
+;        case(of_state_check_ack):{
+_0x15:
+	CPI  R30,LOW(0x3)
+	LDI  R26,HIGH(0x3)
+	CPC  R31,R26
+	BRNE _0x16
+;            if(data){ // if NACK, the master does not want more data
+	CPI  R17,0
+	BREQ _0x17
+;                of_state = of_state_check_address;
+	LDI  R30,LOW(0)
+	RCALL SUBOPT_0x1
+;                set_counter = 0x00;
+	LDI  R16,LOW(0)
+;                twi_reset();
+	RCALL _twi_reset_G000
+;            }else{
+	RJMP _0x18
+_0x17:
+;                of_state = of_state_send_data;
+	LDI  R30,LOW(1)
+	RCALL SUBOPT_0x1
+;                goto again; // from here we just drop straight into state_send_data
+	RJMP _0x9
+;            } // don't wait for another overflow interrupt
+_0x18:
+;            break;
+	RJMP _0xC
+;        }
+;        // process write request from master
+;        case(of_state_receive_data):{
+_0x16:
+	CPI  R30,LOW(0x4)
+	LDI  R26,HIGH(0x4)
+	CPC  R31,R26
+	BRNE _0x19
+;            ss_state = ss_state_data_processed;
+	LDI  R30,LOW(4)
+	RCALL SUBOPT_0x2
+;            of_state = of_state_store_data_and_send_ack;
+	LDI  R30,LOW(5)
+	RCALL SUBOPT_0x1
+;            set_counter = 0x00; // receive 1 bit (2 edges)
+	LDI  R16,LOW(0)
+;            set_sda_to_input(); // initiate receive data
+	RCALL _set_sda_to_input_G000
+;            break;
+	RJMP _0xC
+;        }
+;        // data received from master, store it and wait for more data
+;        case(of_state_store_data_and_send_ack):{
+_0x19:
+	CPI  R30,LOW(0x5)
+	LDI  R26,HIGH(0x5)
+	CPC  R31,R26
+	BRNE _0xC
+;            of_state = of_state_receive_data;
+	LDI  R30,LOW(4)
+	RCALL SUBOPT_0x1
+;            if(input_buffer_length < (USI_TWI_BUFFER_SIZE - 1)){
+	LDS  R26,_input_buffer_length_G000
+	CPI  R26,LOW(0xF)
+	BRSH _0x1B
+;                input_buffer[input_buffer_length++] = data;
+	LDS  R30,_input_buffer_length_G000
+	SUBI R30,-LOW(1)
+	STS  _input_buffer_length_G000,R30
+	SUBI R30,LOW(1)
+	SUBI R30,-LOW(_input_buffer_G000)
+	ST   Z,R17
+;            }
+;            USIDR = 0x00;
+_0x1B:
+	RCALL SUBOPT_0x3
+;            set_counter = 0x0e; // send 1 bit (2 edges)
+	LDI  R16,LOW(14)
+;            set_sda_to_output(); // initiate send ack
+_0x30:
+	RCALL _set_sda_to_output_G000
+;            break;
+;        }
+;    }
+_0xC:
+;    USISR =
+;            (0	<< USISIF) | // don't clear start condition flag
+;            (1	<< USIOIF) | // clear overflow condition flag
+;            (0	<< USIPF) | // don't clear stop condition flag
+;            (1	<< USIDC) | // clear arbitration error flag
+;            (set_counter << USICNT0); // set counter to 8 or 1 bits
+	MOV  R30,R16
+	ORI  R30,LOW(0x50)
+	OUT  0xE,R30
+;}
+	RCALL __LOADLOCR2P
+_0x31:
+	LD   R30,Y+
+	OUT  SREG,R30
+	LD   R31,Y+
+	LD   R30,Y+
+	LD   R27,Y+
+	LD   R26,Y+
+	LD   R25,Y+
+	LD   R24,Y+
+	LD   R23,Y+
+	LD   R22,Y+
+	LD   R15,Y+
+	LD   R1,Y+
+	LD   R0,Y+
+	RETI
+;
+;void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_callback_in)(uint8_t input_buffer_length,
+;                    const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer),void (*idle_callback_in)(void)){
+;    uint8_t	call_datacallback = 0;
+;    slave_address = slave_address_in;
+;	slave_address_in -> Y+6
+;	use_sleep -> Y+5
+;	*data_callback_in -> Y+3
+;	*idle_callback_in -> Y+1
+;	call_datacallback -> R17
+;    data_callback = data_callback_in;
+;    idle_callback = idle_callback_in;
+;    input_buffer_length = 0;
+;    output_buffer_length = 0;
+;    output_buffer_current = 0;
+;    ss_state = ss_state_before_start;
+;//    if(use_sleep){
+;//        set_sleep_mode(SLEEP_MODE_IDLE);
+;//    }
+;    twi_init();
+;    #asm("sei")
+;    for(;;){
+;        if(idle_callback){
+;            idle_callback();
+;        }
+;
+;        if(use_sleep && (ss_state == ss_state_before_start)){
+;            //sleep_mode();
+;        }
+;
+;        if(USISR & _BV(USIPF)){
+;            #asm("cli")
+;            USISR |= _BV(USIPF); // clear stop condition flag
+;            switch(ss_state){
+;                case(ss_state_after_start):{
+;                    twi_reset();
+;                    break;
+;                }
+;
+;                case(ss_state_data_processed):{
+;                    call_datacallback = 1;
+;                    break;
+;                }
+;            }
+;            ss_state = ss_state_before_start;
+;            #asm("sei")
+;        }
+;        if(call_datacallback){
+;            output_buffer_length = 0;
+;            output_buffer_current = 0;
+;            data_callback(input_buffer_length, input_buffer, &output_buffer_length, output_buffer);
+;            input_buffer_length = 0;
+;            call_datacallback = 0;
+;        }
+;    }
+;}
+;
+;#include <configuration.c>
+;
+;static void configure(void){
+; 0000 001E static void configure(void){
+_configure_G000:
+;    // Input/Output Ports initialization
+;    // Port A initialization
+;    // Func2=In Func1=Out Func0=Out
+;    // State2=T State1=0 State0=0
+;    PORTA=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x1B,R30
+;    DDRA=0x03;
+	LDI  R30,LOW(3)
+	OUT  0x1A,R30
+;
+;    // Port B initialization
+;    // Func7=In Func6=In Func5=In Func4=In Func3=In Func2=Out Func1=In Func0=In
+;    // State7=T State6=P State5=T State4=P State3=P State2=0 State1=P State0=P
+;    PORTB=0x5B;
+	LDI  R30,LOW(91)
+	OUT  0x18,R30
+;    DDRB=0x04;
+	LDI  R30,LOW(4)
+	OUT  0x17,R30
+;
+;    // Port D initialization
+;    // Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out
+;    // State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0
+;    PORTD=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x12,R30
+;    DDRD=0x7F;
+	LDI  R30,LOW(127)
+	OUT  0x11,R30
+;
+;    // Timer/Counter 0 initialization
+;    // Clock source: System Clock
+;    // Clock value: 31.250 kHz
+;    // Mode: Fast PWM top=FFh
+;    // OC0A output: Non-Inverted PWM
+;    // OC0B output: Non-Inverted PWM
+;    TCCR0A=0xA3;
+	LDI  R30,LOW(163)
+	OUT  0x30,R30
+;    TCCR0B=0x04;
+	LDI  R30,LOW(4)
+	OUT  0x33,R30
+;    OCR0B=OCR0A=TCNT0=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x32,R30
+	OUT  0x36,R30
+	OUT  0x3C,R30
+;
+;    // Clock value: Timer1 Stopped
+;    OCR1BL=OCR1BH=OCR1AL=OCR1AH=ICR1L=ICR1H=TCNT1L=TCNT1H=TCCR1B=TCCR1A=0x00;
+	OUT  0x2F,R30
+	OUT  0x2E,R30
+	OUT  0x2D,R30
+	OUT  0x2C,R30
+	OUT  0x25,R30
+	OUT  0x24,R30
+	OUT  0x2B,R30
+	OUT  0x2A,R30
+	OUT  0x29,R30
+	OUT  0x28,R30
+;
+;    // External Interrupt(s) initialization
+;    // INT0: Off
+;    // INT1: Off
+;    // Interrupt on any change on pins PCINT0-7: On
+;    GIMSK=0x20;
+	LDI  R30,LOW(32)
+	OUT  0x3B,R30
+;    MCUCR=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x35,R30
+;    PCMSK=0x5B;
+	LDI  R30,LOW(91)
+	OUT  0x20,R30
+;    EIFR=0x20;
+	LDI  R30,LOW(32)
+	OUT  0x3A,R30
+;
+;    // Timer(s)/Counter(s) Interrupt(s) initialization
+;    TIMSK=0x00;
+	LDI  R30,LOW(0)
+	OUT  0x39,R30
+;
+;    // Analog Comparator: Off
+;    ACSR=0x80;
+	LDI  R30,LOW(128)
+	OUT  0x8,R30
+;}
+	RET
+;
 ;
 ;// Pin change 0-7 interrupt service routine
 ;interrupt [PC_INT] void pin_change_isr0(void)
-; 0000 001B {
-
-	.CSEG
+; 0000 0022 {
 _pin_change_isr0:
-; 0000 001C // Place your code here
-; 0000 001D 
-; 0000 001E }
+; 0000 0023 // Place your code here
+; 0000 0024 
+; 0000 0025 }
 	RETI
 ;
 ;// Declare your global variables here
 ;
 ;void main(void)
-; 0000 0023 {
+; 0000 002A {
 _main:
-; 0000 0024 // Declare your local variables here
-; 0000 0025 
-; 0000 0026 // Crystal Oscillator division factor: 1
-; 0000 0027 #pragma optsize-
-; 0000 0028 CLKPR=0x80;
+; 0000 002B // Declare your local variables here
+; 0000 002C 
+; 0000 002D // Crystal Oscillator division factor: 1
+; 0000 002E #pragma optsize-
+; 0000 002F CLKPR=0x80;
 	LDI  R30,LOW(128)
 	OUT  0x26,R30
-; 0000 0029 CLKPR=0x00;
+; 0000 0030 CLKPR=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x26,R30
-; 0000 002A #ifdef _OPTIMIZE_SIZE_
-; 0000 002B #pragma optsize+
-; 0000 002C #endif
-; 0000 002D 
-; 0000 002E // Input/Output Ports initialization
-; 0000 002F // Port A initialization
-; 0000 0030 // Func2=In Func1=Out Func0=Out
-; 0000 0031 // State2=T State1=0 State0=0
-; 0000 0032 PORTA=0x00;
-	OUT  0x1B,R30
-; 0000 0033 DDRA=0x03;
-	LDI  R30,LOW(3)
-	OUT  0x1A,R30
+; 0000 0031 #ifdef _OPTIMIZE_SIZE_
+; 0000 0032 #pragma optsize+
+; 0000 0033 #endif
 ; 0000 0034 
-; 0000 0035 // Port B initialization
-; 0000 0036 // Func7=In Func6=In Func5=In Func4=In Func3=In Func2=Out Func1=In Func0=In
-; 0000 0037 // State7=T State6=P State5=T State4=P State3=P State2=0 State1=P State0=P
-; 0000 0038 PORTB=0x5B;
-	LDI  R30,LOW(91)
-	OUT  0x18,R30
-; 0000 0039 DDRB=0x04;
-	LDI  R30,LOW(4)
-	OUT  0x17,R30
-; 0000 003A 
-; 0000 003B // Port D initialization
-; 0000 003C // Func6=Out Func5=Out Func4=Out Func3=Out Func2=Out Func1=Out Func0=Out
-; 0000 003D // State6=0 State5=0 State4=0 State3=0 State2=0 State1=0 State0=0
-; 0000 003E PORTD=0x00;
-	LDI  R30,LOW(0)
-	OUT  0x12,R30
-; 0000 003F DDRD=0x7F;
-	LDI  R30,LOW(127)
-	OUT  0x11,R30
-; 0000 0040 
-; 0000 0041 // Timer/Counter 0 initialization
-; 0000 0042 // Clock source: System Clock
-; 0000 0043 // Clock value: 31.250 kHz
-; 0000 0044 // Mode: Fast PWM top=FFh
-; 0000 0045 // OC0A output: Non-Inverted PWM
-; 0000 0046 // OC0B output: Non-Inverted PWM
-; 0000 0047 TCCR0A=0xA3;
-	LDI  R30,LOW(163)
-	OUT  0x30,R30
-; 0000 0048 TCCR0B=0x04;
-	LDI  R30,LOW(4)
-	OUT  0x33,R30
-; 0000 0049 TCNT0=0x00;
-	LDI  R30,LOW(0)
-	OUT  0x32,R30
-; 0000 004A OCR0A=0x00;
-	OUT  0x36,R30
-; 0000 004B OCR0B=0x00;
-	OUT  0x3C,R30
-; 0000 004C 
-; 0000 004D // Timer/Counter 1 initialization
-; 0000 004E // Clock source: System Clock
-; 0000 004F // Clock value: Timer1 Stopped
-; 0000 0050 // Mode: Normal top=FFFFh
-; 0000 0051 // OC1A output: Discon.
-; 0000 0052 // OC1B output: Discon.
-; 0000 0053 // Noise Canceler: Off
-; 0000 0054 // Input Capture on Falling Edge
-; 0000 0055 // Timer1 Overflow Interrupt: Off
-; 0000 0056 // Input Capture Interrupt: Off
-; 0000 0057 // Compare A Match Interrupt: Off
-; 0000 0058 // Compare B Match Interrupt: Off
-; 0000 0059 TCCR1A=0x00;
-	OUT  0x2F,R30
-; 0000 005A TCCR1B=0x00;
-	OUT  0x2E,R30
-; 0000 005B TCNT1H=0x00;
-	OUT  0x2D,R30
-; 0000 005C TCNT1L=0x00;
-	OUT  0x2C,R30
-; 0000 005D ICR1H=0x00;
-	OUT  0x25,R30
-; 0000 005E ICR1L=0x00;
-	OUT  0x24,R30
-; 0000 005F OCR1AH=0x00;
-	OUT  0x2B,R30
-; 0000 0060 OCR1AL=0x00;
-	OUT  0x2A,R30
-; 0000 0061 OCR1BH=0x00;
-	OUT  0x29,R30
-; 0000 0062 OCR1BL=0x00;
-	OUT  0x28,R30
-; 0000 0063 
-; 0000 0064 // External Interrupt(s) initialization
-; 0000 0065 // INT0: Off
-; 0000 0066 // INT1: Off
-; 0000 0067 // Interrupt on any change on pins PCINT0-7: On
-; 0000 0068 GIMSK=0x20;
-	LDI  R30,LOW(32)
-	OUT  0x3B,R30
-; 0000 0069 MCUCR=0x00;
-	LDI  R30,LOW(0)
-	OUT  0x35,R30
-; 0000 006A PCMSK=0x5B;
-	LDI  R30,LOW(91)
-	OUT  0x20,R30
-; 0000 006B EIFR=0x20;
-	LDI  R30,LOW(32)
-	OUT  0x3A,R30
-; 0000 006C 
-; 0000 006D // Timer(s)/Counter(s) Interrupt(s) initialization
-; 0000 006E TIMSK=0x00;
-	LDI  R30,LOW(0)
-	OUT  0x39,R30
-; 0000 006F 
-; 0000 0070 // Universal Serial Interface initialization
-; 0000 0071 // Mode: Disabled
-; 0000 0072 // Clock source: Register & Counter=no clk.
-; 0000 0073 // USI Counter Overflow Interrupt: Off
-; 0000 0074 USICR=0x00;
-	OUT  0xD,R30
-; 0000 0075 
-; 0000 0076 // Analog Comparator initialization
-; 0000 0077 // Analog Comparator: Off
-; 0000 0078 // Analog Comparator Input Capture by Timer/Counter 1: Off
-; 0000 0079 ACSR=0x80;
-	LDI  R30,LOW(128)
-	OUT  0x8,R30
-; 0000 007A 
-; 0000 007B // Global enable interrupts
-; 0000 007C #asm("sei")
+; 0000 0035 configure();
+	RCALL _configure_G000
+; 0000 0036 // Global enable interrupts
+; 0000 0037 #asm("sei")
 	sei
-; 0000 007D 
-; 0000 007E while (1)
-_0x3:
-; 0000 007F       {
-; 0000 0080       // Place your code here
-; 0000 0081 
-; 0000 0082       };
-	RJMP _0x3
-; 0000 0083 }
-_0x6:
-	RJMP _0x6
+; 0000 0038 
+; 0000 0039 while (1)
+_0x2A:
+; 0000 003A       {
+; 0000 003B       // Place your code here
+; 0000 003C 
+; 0000 003D       };
+	RJMP _0x2A
+; 0000 003E }
+_0x2D:
+	RJMP _0x2D
+
+	.DSEG
+_idle_callback_G000:
+	.BYTE 0x2
+_data_callback_G000:
+	.BYTE 0x2
+_of_state_G000:
+	.BYTE 0x1
+_ss_state_G000:
+	.BYTE 0x1
+_slave_address_G000:
+	.BYTE 0x1
+_input_buffer_G000:
+	.BYTE 0x10
+_input_buffer_length_G000:
+	.BYTE 0x1
+_output_buffer_G000:
+	.BYTE 0x10
+_output_buffer_length_G000:
+	.BYTE 0x1
+_output_buffer_current_G000:
+	.BYTE 0x1
 
 	.CSEG
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:10 WORDS
+SUBOPT_0x0:
+	ST   -Y,R0
+	ST   -Y,R1
+	ST   -Y,R15
+	ST   -Y,R22
+	ST   -Y,R23
+	ST   -Y,R24
+	ST   -Y,R25
+	ST   -Y,R26
+	ST   -Y,R27
+	ST   -Y,R30
+	ST   -Y,R31
+	IN   R30,SREG
+	ST   -Y,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:4 WORDS
+SUBOPT_0x1:
+	STS  _of_state_G000,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:2 WORDS
+SUBOPT_0x2:
+	STS  _ss_state_G000,R30
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x3:
+	LDI  R30,LOW(0)
+	OUT  0xF,R30
+	RET
+
 
 	.CSEG
+__SAVELOCR2:
+	ST   -Y,R17
+	ST   -Y,R16
+	RET
+
+__LOADLOCR2P:
+	LD   R16,Y+
+	LD   R17,Y+
+	RET
+
 ;END OF CODE MARKER
 __END_OF_CODE:

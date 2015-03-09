@@ -27,7 +27,6 @@ Data Stack size         : 32
 #include <generalCompatabilityDefinitions.c>
 #include <twiOverUsi.c>
 
-#include <configuration.c>
 
 // Pin change 0-7 interrupt service routine
 interrupt [PC_INT] void pin_change_isr0(void)
@@ -50,7 +49,7 @@ CLKPR=0x00;
 #pragma optsize+
 #endif
 
-configure();
+
 // Global enable interrupts
 #asm("sei")
 
