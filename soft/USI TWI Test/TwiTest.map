@@ -11,8 +11,6 @@ input_buffer_length                                               0097h        1
 output_buffer                                                     0098h       16
 output_buffer_length                                              00A8h        1
 output_buffer_current                                             00A9h        1
-phy_send_buffer                                                   00AAh        1
-phy_send_buffer_length                                            00ABh        1
 
 EEPROM Allocation
 Variable                                                          Address   Size
