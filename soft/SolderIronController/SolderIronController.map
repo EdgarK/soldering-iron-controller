@@ -15,9 +15,13 @@ output_buffer_current                                             00A9h        1
 EEPROM Allocation
 Variable                                                          Address   Size
 --------------------------------------------------------------------------------
+pwmValues                                                         0000h        2
+settingTarget                                                     0002h        1
 
 Register Allocation
 Variable                                                          Register  Size
 --------------------------------------------------------------------------------
 overflow_state_t                                                  R3           1
 startstop_state_t                                                 R2           1
+outputStates                                                      R5           1
+lastPortBValue                                                    R4           1

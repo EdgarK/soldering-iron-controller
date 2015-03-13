@@ -28,21 +28,212 @@ Data Stack size         : 32
 #include <twiOverUsi.c>
 
 #include <configuration.c>
+#include <delay.h>
 
-// Pin change 0-7 interrupt service routine
-interrupt [PC_INT] void pin_change_isr0(void)
-{
-// Place your code here
+#define TWI_ADDRESS         0b1000000
+#define LedDelay            50
+eeprom ui16 pwmValues     = 0;
+eeprom ui8  settingTarget = 0;
 
+ui8 outputStates           = 0;
+ui8 lastPortBValue         = 0;
+
+
+void setOut1StateTo(ui8 isOn);
+void setOut2StateTo(ui8 isOn);
+void savePwmValues(void);
+
+static void responde(uint8_t *output_buffer_length, uint8_t *output_buffer){
+    *output_buffer_length = 3;
+    output_buffer[0] = OCR0A;
+    output_buffer[1] = OCR0B;
+    output_buffer[2] = outputStates;    
+}
+static void on_twi_receive(uint8_t input_buffer_length, const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer){
+    if(input_buffer_length != 2){
+        responde(output_buffer_length, output_buffer);
+        return;
+    }
+              
+    if(input_buffer[0] & 1){//zero bit
+        setOut1StateTo(input_buffer[1] & 1);          
+    }else if(input_buffer[0] & 2){// first
+        setOut2StateTo(input_buffer[1] & 1);
+    }else if(input_buffer[0] & 4){
+        OCR0A = input_buffer[1];
+        savePwmValues();
+    }else if(input_buffer[0] & 8){
+        OCR0B = input_buffer[1];
+        savePwmValues();
+    }
+    responde(output_buffer_length, output_buffer);    
 }
 
-// Declare your global variables here
+void restorePwmValues(void){
+    OCR0A = (char) pwmValues >> 8;
+    OCR0B = (char) pwmValues;
+}                   
 
-void main(void)
-{
-// Declare your local variables here
+void savePwmValues(void){
+    ui16 buffer = 0;
+    
+    buffer = OCR0A << 8;
+    buffer |= OCR0B;
+    pwmValues = buffer;
+}    
 
-// Crystal Oscillator division factor: 1
+static void increasePwm(void){
+    if(!settingTarget){
+        if(OCR0A < 0xFF)
+            OCR0A++;
+    }else{
+        if(OCR0B < 0xFF)
+            OCR0B++;
+    }
+    savePwmValues();
+}
+
+static void decreasePwm(void){
+    if(!settingTarget){
+        if(OCR0A > 0)
+            OCR0A--;
+    }else{
+        if(OCR0B > 0)
+            OCR0B--;
+    }   
+    savePwmValues();
+}
+
+void toggleTarget(void){
+    settingTarget = !settingTarget;
+} 
+
+void turnOut1On(void){
+    DDRB |= 0b00000100;
+    outputStates |= 0b00000001;
+}
+void turnOut1Off(void){
+    DDRB &= 0b11111011; //To disable output just configuring it as an input
+    outputStates &= 0b11111110;  
+}
+void setOut1StateTo(ui8 isOn){
+    if(isOn)
+        turnOut1On();
+    else
+        turnOut1Off();
+}
+void toggleOut1State(void){
+    setOut1StateTo(!(outputStates & 1));
+}
+
+void turnOut2On(void){
+    outputStates |= 0b00000010;
+    DDRD |= 0b00100000;
+}
+void turnOut2Off(void){
+     DDRD &= 0b11011111;
+     outputStates &= 0b11111101;    
+}
+void setOut2StateTo(ui8 isOn){
+    if(isOn)
+        turnOut2On();
+    else
+        turnOut2Off();
+}
+void toggleOut2State(void){
+    setOut2StateTo(!(outputStates & 2));                
+}
+
+   
+// Pin change 0-7 interrupt service routine
+interrupt [PC_INT] void pin_change_isr0(void){
+    if((lastPortBValue & (1<<4)) != (PINB & (1<<4))){
+        if(!PINB.4){
+            if(PINB.3)
+                increasePwm();
+            else
+                decreasePwm();
+        }else{
+            if(!PINB.3)
+                increasePwm();
+            else
+                decreasePwm();
+        }
+    }else if((lastPortBValue & (1<<3)) != (PINB & (1<<3))){
+        if(!PINB.3){
+            if(!PINB.4)
+                increasePwm();
+            else
+                decreasePwm();
+        }else{
+            if(PINB.4)
+                increasePwm();
+            else
+                decreasePwm();
+        }
+    }else if(((lastPortBValue & (1<<6)) != (PINB & (1<<6))) && !PINB.6){
+        toggleTarget();
+    }else if(((lastPortBValue & (1<<1)) != (PINB & (1<<1))) && !PINB.1){  
+        toggleOut1State();        
+    }else if(((lastPortBValue & 1) != (PINB & 1)) && !PINB.0){
+        toggleOut2State();
+    } 
+    lastPortBValue = PORTB;
+}
+ 
+void displayVal(ui8 val){
+    ui8 value;
+    if(val > 85){
+        value = (val - 85) / 34; 
+        switch(value){
+            case(1):{
+                PORTD.4 = 1;
+                PORTD.3 = 0;
+                PORTD.2 = 0;
+                PORTA.0 = 0;
+                PORTA.1 = 0;
+                break;
+            }
+            case(2):{
+                PORTD.4 = 1;
+                PORTD.3 = 1;
+                PORTD.2 = 0;
+                PORTA.0 = 0;
+                PORTA.1 = 0;
+                break;
+            }
+            case(3):{
+                PORTD.4 = 1;
+                PORTD.3 = 1;
+                PORTD.2 = 1;
+                PORTA.0 = 0;
+                PORTA.1 = 0;
+                break;
+            }
+            case(4):{       
+                PORTD.4 = 1;
+                PORTD.3 = 1;
+                PORTD.2 = 1;
+                PORTA.0 = 1;
+                PORTA.1 = 0;
+                break;
+            }
+            case(5):{       
+                PORTD.4 = 1;
+                PORTD.3 = 1;
+                PORTD.2 = 1;
+                PORTA.0 = 1;
+                PORTA.1 = 1;
+                break;
+            }
+        }    
+    }
+    PORTD.6 = !!val;//first led
+}
+     
+void main(void){
+ui8 toggler = 0;
+    // Crystal Oscillator division factor: 1
 #pragma optsize-
 CLKPR=0x80;
 CLKPR=0x00;
@@ -50,13 +241,25 @@ CLKPR=0x00;
 #pragma optsize+
 #endif
 
-configure();
-// Global enable interrupts
-#asm("sei")
+    configure();
 
-while (1)
-      {
-      // Place your code here
+    restorePwmValues();
 
-      };
+    usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
+    #asm("sei")
+
+    while (1){
+        if(!settingTarget){
+            displayVal(OCR0A);    
+        }else{
+            if(toggler)
+                displayVal(OCR0B);
+            else
+                displayVal(0);
+            toggler = !toggler;
+            delay_ms(LedDelay); 
+        }
+        PORTD.0 = !!(outputStates & 1);
+        PORTD.1 = !!(outputStates & 2);  
+    };
 }

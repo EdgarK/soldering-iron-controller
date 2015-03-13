@@ -102,7 +102,7 @@ WarningUnknownPragma=1
 LinkerWarnings=1
 DebugBootLoader=0
 WatchAVR8LAutoVariables=0
-Build=6
+Build=47
 UseEEPROMLocation0=1
 [Assembler]
 OutputFormat=1
@@ -178,7 +178,7 @@ RunUserProg=0
 Files=1
 F1=C:\projects\soldering-iron-controller\soft\SolderIronController\SolderIronController.c
 [Header1]
-Files=7
+Files=8
 F1=C:\cvavr2\inc\tiny2313.h
 F2=C:\cvavr2\inc\tiny2313_bits.h
 F3=C:\cvavr2\inc\stdint.h
@@ -186,3 +186,4 @@ F4=ui.c
 F5=generalCompatabilityDefinitions.c
 F6=twiOverUsi.c
 F7=configuration.c
+F8=C:\cvavr2\inc\delay.h
