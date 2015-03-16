@@ -47,6 +47,7 @@
 ;
 ;#include <generalCompatabilityDefinitions.c>
 ;#define _BV(bit)    (1 << (bit))
+;#define BV(byte, num) ((byte>>num)&1)
 ;
 ;#ifndef NULL
 ;    #define NULL 0
@@ -781,7 +782,7 @@
 ;    TCCR0A=0xA3;
 ;PCODE: $00000184 VOL: 0
 ;PCODE: $00000185 VOL: 0
-;    TCCR0B=0x04;
+;    TCCR0B=0x03;
 ;PCODE: $00000186 VOL: 0
 ;PCODE: $00000187 VOL: 0
 ;    OCR0B=OCR0A=TCNT0=0x00;
@@ -814,7 +815,7 @@
 ;    MCUCR=0x00;
 ;PCODE: $00000199 VOL: 0
 ;PCODE: $0000019A VOL: 0
-;    PCMSK=0x5B;
+;    PCMSK=0b1011011;
 ;PCODE: $0000019B VOL: 0
 ;PCODE: $0000019C VOL: 0
 ;    EIFR=0x20;
@@ -974,360 +975,355 @@
 ; 0000 0048 void restorePwmValues(void){
 ;PCODE: $000001FC VOL: 0
 ;PCODE: $000001FD VOL: 0
-; 0000 0049     OCR0A = (char) pwmValues >> 8;
+; 0000 0049     OCR0A = (ui8) (pwmValues >> 8);
 ;PCODE: $000001FE VOL: 0
 ;PCODE: $000001FF VOL: 0
 ;PCODE: $00000200 VOL: 0
 ;PCODE: $00000201 VOL: 0
+; 0000 004A     OCR0B = (ui8) pwmValues;
 ;PCODE: $00000202 VOL: 0
-; 0000 004A     OCR0B = (char) pwmValues;
 ;PCODE: $00000203 VOL: 0
 ;PCODE: $00000204 VOL: 0
-;PCODE: $00000205 VOL: 0
 ; 0000 004B }
+;PCODE: $00000205 VOL: 0
 ;PCODE: $00000206 VOL: 0
-;PCODE: $00000207 VOL: 0
 ;
 ;void savePwmValues(void){
 ; 0000 004D void savePwmValues(void){
+;PCODE: $00000207 VOL: 0
 ;PCODE: $00000208 VOL: 0
-;PCODE: $00000209 VOL: 0
 ; 0000 004E     ui16 buffer = 0;
 ; 0000 004F 
-; 0000 0050     buffer = OCR0A << 8;
-;PCODE: $0000020A VOL: 0
+; 0000 0050     buffer = OCR0A;
+;PCODE: $00000209 VOL: 0
 ;	buffer -> R16,R17
+;PCODE: $0000020A VOL: 0
 ;PCODE: $0000020B VOL: 0
 ;PCODE: $0000020C VOL: 0
 ;PCODE: $0000020D VOL: 0
 ;PCODE: $0000020E VOL: 0
+; 0000 0051     buffer = buffer << 8;
 ;PCODE: $0000020F VOL: 0
-; 0000 0051     buffer |= OCR0B;
+; 0000 0052     buffer |= OCR0B;
 ;PCODE: $00000210 VOL: 0
 ;PCODE: $00000211 VOL: 0
 ;PCODE: $00000212 VOL: 0
 ;PCODE: $00000213 VOL: 0
-; 0000 0052     pwmValues = buffer;
+; 0000 0053     pwmValues = buffer;
 ;PCODE: $00000214 VOL: 0
 ;PCODE: $00000215 VOL: 0
 ;PCODE: $00000216 VOL: 0
-; 0000 0053 }
+; 0000 0054 }
 ;PCODE: $00000217 VOL: 0
 ;PCODE: $00000218 VOL: 0
 ;PCODE: $00000219 VOL: 0
 ;
 ;static void increasePwm(void){
-; 0000 0055 static void increasePwm(void){
+; 0000 0056 static void increasePwm(void){
 ;PCODE: $0000021A VOL: 0
 ;PCODE: $0000021B VOL: 0
-; 0000 0056     if(!settingTarget){
+; 0000 0057     if(!settingTarget){
 ;PCODE: $0000021C VOL: 0
 ;PCODE: $0000021D VOL: 0
 ;PCODE: $0000021E VOL: 0
 ;PCODE: $0000021F VOL: 0
-; 0000 0057         if(OCR0A < 0xFF)
+; 0000 0058         if(OCR0A > 0xFD) OCR0A = 0xFF;
 ;PCODE: $00000220 VOL: 0
 ;PCODE: $00000221 VOL: 0
 ;PCODE: $00000222 VOL: 0
-; 0000 0058             OCR0A++;
 ;PCODE: $00000223 VOL: 0
 ;PCODE: $00000224 VOL: 0
+; 0000 0059         if(OCR0A < 0xFF){
 ;PCODE: $00000225 VOL: 0
 ;PCODE: $00000226 VOL: 0
-; 0000 0059     }else{
 ;PCODE: $00000227 VOL: 0
 ;PCODE: $00000228 VOL: 0
+; 0000 005A             OCR0A += 2;
 ;PCODE: $00000229 VOL: 0
-; 0000 005A         if(OCR0B < 0xFF)
 ;PCODE: $0000022A VOL: 0
 ;PCODE: $0000022B VOL: 0
+; 0000 005B         }
+; 0000 005C     }else{
 ;PCODE: $0000022C VOL: 0
-; 0000 005B             OCR0B++;
 ;PCODE: $0000022D VOL: 0
 ;PCODE: $0000022E VOL: 0
+; 0000 005D         if(OCR0B > 0xFD) OCR0B = 0xFF;
 ;PCODE: $0000022F VOL: 0
 ;PCODE: $00000230 VOL: 0
-; 0000 005C     }
 ;PCODE: $00000231 VOL: 0
 ;PCODE: $00000232 VOL: 0
-; 0000 005D     savePwmValues();
 ;PCODE: $00000233 VOL: 0
-; 0000 005E }
+; 0000 005E         if(OCR0B < 0xFF){
 ;PCODE: $00000234 VOL: 0
 ;PCODE: $00000235 VOL: 0
-;
-;static void decreasePwm(void){
-; 0000 0060 static void decreasePwm(void){
 ;PCODE: $00000236 VOL: 0
 ;PCODE: $00000237 VOL: 0
-; 0000 0061     if(!settingTarget){
+; 0000 005F             OCR0B += 2;
 ;PCODE: $00000238 VOL: 0
 ;PCODE: $00000239 VOL: 0
 ;PCODE: $0000023A VOL: 0
+; 0000 0060         }
+; 0000 0061     }
 ;PCODE: $0000023B VOL: 0
-; 0000 0062         if(OCR0A > 0)
 ;PCODE: $0000023C VOL: 0
+; 0000 0062     savePwmValues();
 ;PCODE: $0000023D VOL: 0
+; 0000 0063 }
 ;PCODE: $0000023E VOL: 0
-; 0000 0063             OCR0A--;
 ;PCODE: $0000023F VOL: 0
+;
+;static void decreasePwm(void){
+; 0000 0065 static void decreasePwm(void){
 ;PCODE: $00000240 VOL: 0
 ;PCODE: $00000241 VOL: 0
+; 0000 0066     if(!settingTarget){
 ;PCODE: $00000242 VOL: 0
-; 0000 0064     }else{
 ;PCODE: $00000243 VOL: 0
 ;PCODE: $00000244 VOL: 0
 ;PCODE: $00000245 VOL: 0
-; 0000 0065         if(OCR0B > 0)
+; 0000 0067         if(OCR0A == 1) OCR0A = 0;
 ;PCODE: $00000246 VOL: 0
 ;PCODE: $00000247 VOL: 0
 ;PCODE: $00000248 VOL: 0
-; 0000 0066             OCR0B--;
 ;PCODE: $00000249 VOL: 0
 ;PCODE: $0000024A VOL: 0
+; 0000 0068         if(OCR0A > 0)
 ;PCODE: $0000024B VOL: 0
 ;PCODE: $0000024C VOL: 0
-; 0000 0067     }
 ;PCODE: $0000024D VOL: 0
 ;PCODE: $0000024E VOL: 0
-; 0000 0068     savePwmValues();
+; 0000 0069             OCR0A -= 2;
 ;PCODE: $0000024F VOL: 0
-; 0000 0069 }
 ;PCODE: $00000250 VOL: 0
 ;PCODE: $00000251 VOL: 0
-;
-;void toggleTarget(void){
-; 0000 006B void toggleTarget(void){
 ;PCODE: $00000252 VOL: 0
+; 0000 006A     }else{
 ;PCODE: $00000253 VOL: 0
-; 0000 006C     settingTarget = !settingTarget;
 ;PCODE: $00000254 VOL: 0
 ;PCODE: $00000255 VOL: 0
+; 0000 006B         if(OCR0B == 1) OCR0B = 0;
 ;PCODE: $00000256 VOL: 0
 ;PCODE: $00000257 VOL: 0
 ;PCODE: $00000258 VOL: 0
-; 0000 006D }
 ;PCODE: $00000259 VOL: 0
 ;PCODE: $0000025A VOL: 0
-;
-;void turnOut1On(void){
-; 0000 006F void turnOut1On(void){
+; 0000 006C         if(OCR0B > 0)
 ;PCODE: $0000025B VOL: 0
 ;PCODE: $0000025C VOL: 0
-; 0000 0070     DDRB |= 0b00000100;
 ;PCODE: $0000025D VOL: 0
 ;PCODE: $0000025E VOL: 0
-; 0000 0071     outputStates |= 0b00000001;
+; 0000 006D             OCR0B -= 2;
 ;PCODE: $0000025F VOL: 0
 ;PCODE: $00000260 VOL: 0
 ;PCODE: $00000261 VOL: 0
-; 0000 0072 }
 ;PCODE: $00000262 VOL: 0
+; 0000 006E     }
 ;PCODE: $00000263 VOL: 0
-;void turnOut1Off(void){
-; 0000 0073 void turnOut1Off(void){
 ;PCODE: $00000264 VOL: 0
+; 0000 006F     savePwmValues();
 ;PCODE: $00000265 VOL: 0
-; 0000 0074     DDRB &= 0b11111011; //To disable output just configuring it as an input
+; 0000 0070 }
 ;PCODE: $00000266 VOL: 0
 ;PCODE: $00000267 VOL: 0
-; 0000 0075     outputStates &= 0b11111110;
+;
+;void toggleTarget(void){
+; 0000 0072 void toggleTarget(void){
 ;PCODE: $00000268 VOL: 0
 ;PCODE: $00000269 VOL: 0
+; 0000 0073     settingTarget = !settingTarget;
 ;PCODE: $0000026A VOL: 0
-; 0000 0076 }
 ;PCODE: $0000026B VOL: 0
 ;PCODE: $0000026C VOL: 0
-;void setOut1StateTo(ui8 isOn){
-; 0000 0077 void setOut1StateTo(ui8 isOn){
 ;PCODE: $0000026D VOL: 0
 ;PCODE: $0000026E VOL: 0
-; 0000 0078     if(isOn)
-;	isOn -> Y+0
+; 0000 0074 }
 ;PCODE: $0000026F VOL: 0
 ;PCODE: $00000270 VOL: 0
+;
+;void turnOut1On(void){
+; 0000 0076 void turnOut1On(void){
 ;PCODE: $00000271 VOL: 0
-; 0000 0079         turnOut1On();
 ;PCODE: $00000272 VOL: 0
-; 0000 007A     else
+; 0000 0077     DDRB |= 0b00000100;
 ;PCODE: $00000273 VOL: 0
 ;PCODE: $00000274 VOL: 0
-; 0000 007B         turnOut1Off();
+; 0000 0078     outputStates |= 0b00000001;
 ;PCODE: $00000275 VOL: 0
-; 0000 007C }
 ;PCODE: $00000276 VOL: 0
 ;PCODE: $00000277 VOL: 0
+; 0000 0079 }
 ;PCODE: $00000278 VOL: 0
 ;PCODE: $00000279 VOL: 0
-;void toggleOut1State(void){
-; 0000 007D void toggleOut1State(void){
+;void turnOut1Off(void){
+; 0000 007A void turnOut1Off(void){
 ;PCODE: $0000027A VOL: 0
 ;PCODE: $0000027B VOL: 0
-; 0000 007E     setOut1StateTo(!(outputStates & 1));
+; 0000 007B     DDRB &= 0b11111011; //To disable output just configuring it as an input
 ;PCODE: $0000027C VOL: 0
 ;PCODE: $0000027D VOL: 0
+; 0000 007C     outputStates &= 0b11111110;
 ;PCODE: $0000027E VOL: 0
 ;PCODE: $0000027F VOL: 0
 ;PCODE: $00000280 VOL: 0
-; 0000 007F }
+; 0000 007D }
 ;PCODE: $00000281 VOL: 0
 ;PCODE: $00000282 VOL: 0
-;
-;void turnOut2On(void){
-; 0000 0081 void turnOut2On(void){
+;void setOut1StateTo(ui8 isOn){
+; 0000 007E void setOut1StateTo(ui8 isOn){
 ;PCODE: $00000283 VOL: 0
 ;PCODE: $00000284 VOL: 0
-; 0000 0082     outputStates |= 0b00000010;
+; 0000 007F     if(isOn)
+;	isOn -> Y+0
 ;PCODE: $00000285 VOL: 0
 ;PCODE: $00000286 VOL: 0
 ;PCODE: $00000287 VOL: 0
-; 0000 0083     DDRD |= 0b00100000;
+; 0000 0080         turnOut1On();
 ;PCODE: $00000288 VOL: 0
+; 0000 0081     else
 ;PCODE: $00000289 VOL: 0
-; 0000 0084 }
 ;PCODE: $0000028A VOL: 0
+; 0000 0082         turnOut1Off();
 ;PCODE: $0000028B VOL: 0
-;void turnOut2Off(void){
-; 0000 0085 void turnOut2Off(void){
+; 0000 0083 }
 ;PCODE: $0000028C VOL: 0
 ;PCODE: $0000028D VOL: 0
-; 0000 0086      DDRD &= 0b11011111;
 ;PCODE: $0000028E VOL: 0
 ;PCODE: $0000028F VOL: 0
-; 0000 0087      outputStates &= 0b11111101;
+;void toggleOut1State(void){
+; 0000 0084 void toggleOut1State(void){
 ;PCODE: $00000290 VOL: 0
 ;PCODE: $00000291 VOL: 0
+; 0000 0085     setOut1StateTo(!(outputStates & 1));
 ;PCODE: $00000292 VOL: 0
-; 0000 0088 }
 ;PCODE: $00000293 VOL: 0
 ;PCODE: $00000294 VOL: 0
-;void setOut2StateTo(ui8 isOn){
-; 0000 0089 void setOut2StateTo(ui8 isOn){
 ;PCODE: $00000295 VOL: 0
 ;PCODE: $00000296 VOL: 0
-; 0000 008A     if(isOn)
-;	isOn -> Y+0
+; 0000 0086 }
 ;PCODE: $00000297 VOL: 0
 ;PCODE: $00000298 VOL: 0
+;
+;void turnOut2On(void){
+; 0000 0088 void turnOut2On(void){
 ;PCODE: $00000299 VOL: 0
-; 0000 008B         turnOut2On();
 ;PCODE: $0000029A VOL: 0
-; 0000 008C     else
+; 0000 0089     outputStates |= 0b00000010;
 ;PCODE: $0000029B VOL: 0
 ;PCODE: $0000029C VOL: 0
-; 0000 008D         turnOut2Off();
 ;PCODE: $0000029D VOL: 0
-; 0000 008E }
+; 0000 008A     DDRD |= 0b00100000;
 ;PCODE: $0000029E VOL: 0
 ;PCODE: $0000029F VOL: 0
+; 0000 008B }
 ;PCODE: $000002A0 VOL: 0
 ;PCODE: $000002A1 VOL: 0
-;void toggleOut2State(void){
-; 0000 008F void toggleOut2State(void){
+;void turnOut2Off(void){
+; 0000 008C void turnOut2Off(void){
 ;PCODE: $000002A2 VOL: 0
 ;PCODE: $000002A3 VOL: 0
-; 0000 0090     setOut2StateTo(!(outputStates & 2));
+; 0000 008D      DDRD &= 0b11011111;
 ;PCODE: $000002A4 VOL: 0
 ;PCODE: $000002A5 VOL: 0
+; 0000 008E      outputStates &= 0b11111101;
 ;PCODE: $000002A6 VOL: 0
 ;PCODE: $000002A7 VOL: 0
 ;PCODE: $000002A8 VOL: 0
-; 0000 0091 }
+; 0000 008F }
 ;PCODE: $000002A9 VOL: 0
 ;PCODE: $000002AA VOL: 0
+;void setOut2StateTo(ui8 isOn){
+; 0000 0090 void setOut2StateTo(ui8 isOn){
+;PCODE: $000002AB VOL: 0
+;PCODE: $000002AC VOL: 0
+; 0000 0091     if(isOn)
+;	isOn -> Y+0
+;PCODE: $000002AD VOL: 0
+;PCODE: $000002AE VOL: 0
+;PCODE: $000002AF VOL: 0
+; 0000 0092         turnOut2On();
+;PCODE: $000002B0 VOL: 0
+; 0000 0093     else
+;PCODE: $000002B1 VOL: 0
+;PCODE: $000002B2 VOL: 0
+; 0000 0094         turnOut2Off();
+;PCODE: $000002B3 VOL: 0
+; 0000 0095 }
+;PCODE: $000002B4 VOL: 0
+;PCODE: $000002B5 VOL: 0
+;PCODE: $000002B6 VOL: 0
+;PCODE: $000002B7 VOL: 0
+;void toggleOut2State(void){
+; 0000 0096 void toggleOut2State(void){
+;PCODE: $000002B8 VOL: 0
+;PCODE: $000002B9 VOL: 0
+; 0000 0097     setOut2StateTo(!(outputStates & 2));
+;PCODE: $000002BA VOL: 0
+;PCODE: $000002BB VOL: 0
+;PCODE: $000002BC VOL: 0
+;PCODE: $000002BD VOL: 0
+;PCODE: $000002BE VOL: 0
+; 0000 0098 }
+;PCODE: $000002BF VOL: 0
+;PCODE: $000002C0 VOL: 0
 ;
 ;
 ;// Pin change 0-7 interrupt service routine
 ;interrupt [PC_INT] void pin_change_isr0(void){
-; 0000 0095 interrupt [12] void pin_change_isr0(void){
-;PCODE: $000002AB VOL: 0
-;PCODE: $000002AC VOL: 0
-; 0000 0096     if((lastPortBValue & (1<<4)) != (PINB & (1<<4))){
-;PCODE: $000002AD VOL: 0
-;PCODE: $000002AE VOL: 0
-;PCODE: $000002AF VOL: 0
-;PCODE: $000002B0 VOL: 0
-;PCODE: $000002B1 VOL: 0
-;PCODE: $000002B2 VOL: 0
-;PCODE: $000002B3 VOL: 0
-; 0000 0097         if(!PINB.4){
-;PCODE: $000002B4 VOL: 0
-;PCODE: $000002B5 VOL: 0
-;PCODE: $000002B6 VOL: 0
-; 0000 0098             if(PINB.3)
-;PCODE: $000002B7 VOL: 0
-;PCODE: $000002B8 VOL: 0
-;PCODE: $000002B9 VOL: 0
-; 0000 0099                 increasePwm();
-;PCODE: $000002BA VOL: 0
-; 0000 009A             else
-;PCODE: $000002BB VOL: 0
-;PCODE: $000002BC VOL: 0
-; 0000 009B                 decreasePwm();
-;PCODE: $000002BD VOL: 0
-; 0000 009C         }else{
-;PCODE: $000002BE VOL: 0
-;PCODE: $000002BF VOL: 0
-;PCODE: $000002C0 VOL: 0
-; 0000 009D             if(!PINB.3)
+; 0000 009C interrupt [12] void pin_change_isr0(void){
 ;PCODE: $000002C1 VOL: 0
 ;PCODE: $000002C2 VOL: 0
+; 0000 009D     if(BV(lastPortBValue,4) != BV(PINB,4)){
 ;PCODE: $000002C3 VOL: 0
-; 0000 009E                 increasePwm();
 ;PCODE: $000002C4 VOL: 0
-; 0000 009F             else
 ;PCODE: $000002C5 VOL: 0
 ;PCODE: $000002C6 VOL: 0
-; 0000 00A0                 decreasePwm();
 ;PCODE: $000002C7 VOL: 0
-; 0000 00A1         }
 ;PCODE: $000002C8 VOL: 0
 ;PCODE: $000002C9 VOL: 0
-; 0000 00A2     }else if((lastPortBValue & (1<<3)) != (PINB & (1<<3))){
 ;PCODE: $000002CA VOL: 0
 ;PCODE: $000002CB VOL: 0
 ;PCODE: $000002CC VOL: 0
 ;PCODE: $000002CD VOL: 0
+; 0000 009E         if(!BV(PINB, 4)){
 ;PCODE: $000002CE VOL: 0
 ;PCODE: $000002CF VOL: 0
 ;PCODE: $000002D0 VOL: 0
 ;PCODE: $000002D1 VOL: 0
 ;PCODE: $000002D2 VOL: 0
-; 0000 00A3         if(!PINB.3){
+; 0000 009F             if(BV(PINB, 3))
 ;PCODE: $000002D3 VOL: 0
 ;PCODE: $000002D4 VOL: 0
 ;PCODE: $000002D5 VOL: 0
-; 0000 00A4             if(!PINB.4)
 ;PCODE: $000002D6 VOL: 0
 ;PCODE: $000002D7 VOL: 0
+; 0000 00A0                 decreasePwm();//1
 ;PCODE: $000002D8 VOL: 0
-; 0000 00A5                 increasePwm();
+; 0000 00A1             else
 ;PCODE: $000002D9 VOL: 0
-; 0000 00A6             else
 ;PCODE: $000002DA VOL: 0
+; 0000 00A2                 increasePwm();//2
 ;PCODE: $000002DB VOL: 0
-; 0000 00A7                 decreasePwm();
+; 0000 00A3         }else{
 ;PCODE: $000002DC VOL: 0
-; 0000 00A8         }else{
 ;PCODE: $000002DD VOL: 0
 ;PCODE: $000002DE VOL: 0
+; 0000 00A4             if(BV(PINB, 3))
 ;PCODE: $000002DF VOL: 0
-; 0000 00A9             if(PINB.4)
 ;PCODE: $000002E0 VOL: 0
 ;PCODE: $000002E1 VOL: 0
 ;PCODE: $000002E2 VOL: 0
-; 0000 00AA                 increasePwm();
 ;PCODE: $000002E3 VOL: 0
-; 0000 00AB             else
+; 0000 00A5                 increasePwm();
 ;PCODE: $000002E4 VOL: 0
+; 0000 00A6             else
 ;PCODE: $000002E5 VOL: 0
-; 0000 00AC                 decreasePwm();
 ;PCODE: $000002E6 VOL: 0
-; 0000 00AD         }
+; 0000 00A7                 decreasePwm();
 ;PCODE: $000002E7 VOL: 0
+; 0000 00A8         }
 ;PCODE: $000002E8 VOL: 0
-; 0000 00AE     }else if(((lastPortBValue & (1<<6)) != (PINB & (1<<6))) && !PINB.6){
 ;PCODE: $000002E9 VOL: 0
+; 0000 00A9     }else if(BV(lastPortBValue,3) != BV(PINB,3)){
 ;PCODE: $000002EA VOL: 0
 ;PCODE: $000002EB VOL: 0
 ;PCODE: $000002EC VOL: 0
@@ -1341,11 +1337,11 @@
 ;PCODE: $000002F4 VOL: 0
 ;PCODE: $000002F5 VOL: 0
 ;PCODE: $000002F6 VOL: 0
+; 0000 00AA 
+; 0000 00AB     }else if((BV(lastPortBValue, 6) != BV(PINB,6)) && BV(PINB, 6)){
 ;PCODE: $000002F7 VOL: 0
 ;PCODE: $000002F8 VOL: 0
-; 0000 00AF         toggleTarget();
 ;PCODE: $000002F9 VOL: 0
-; 0000 00B0     }else if(((lastPortBValue & (1<<1)) != (PINB & (1<<1))) && !PINB.1){
 ;PCODE: $000002FA VOL: 0
 ;PCODE: $000002FB VOL: 0
 ;PCODE: $000002FC VOL: 0
@@ -1362,15 +1358,15 @@
 ;PCODE: $00000307 VOL: 0
 ;PCODE: $00000308 VOL: 0
 ;PCODE: $00000309 VOL: 0
-; 0000 00B1         toggleOut1State();
 ;PCODE: $0000030A VOL: 0
-; 0000 00B2     }else if(((lastPortBValue & 1) != (PINB & 1)) && !PINB.0){
 ;PCODE: $0000030B VOL: 0
 ;PCODE: $0000030C VOL: 0
 ;PCODE: $0000030D VOL: 0
 ;PCODE: $0000030E VOL: 0
 ;PCODE: $0000030F VOL: 0
+; 0000 00AC         toggleTarget();
 ;PCODE: $00000310 VOL: 0
+; 0000 00AD     }else if(((lastPortBValue & (1<<1)) != (PINB & (1<<1))) && !PINB.1){
 ;PCODE: $00000311 VOL: 0
 ;PCODE: $00000312 VOL: 0
 ;PCODE: $00000313 VOL: 0
@@ -1381,256 +1377,257 @@
 ;PCODE: $00000318 VOL: 0
 ;PCODE: $00000319 VOL: 0
 ;PCODE: $0000031A VOL: 0
-; 0000 00B3         toggleOut2State();
 ;PCODE: $0000031B VOL: 0
-; 0000 00B4     }
-; 0000 00B5     lastPortBValue = PORTB;
 ;PCODE: $0000031C VOL: 0
 ;PCODE: $0000031D VOL: 0
 ;PCODE: $0000031E VOL: 0
 ;PCODE: $0000031F VOL: 0
 ;PCODE: $00000320 VOL: 0
+; 0000 00AE         toggleOut1State();
 ;PCODE: $00000321 VOL: 0
+; 0000 00AF     }else if(((lastPortBValue & 1) != (PINB & 1)) && !PINB.0){
 ;PCODE: $00000322 VOL: 0
-; 0000 00B6 }
 ;PCODE: $00000323 VOL: 0
 ;PCODE: $00000324 VOL: 0
 ;PCODE: $00000325 VOL: 0
-;
-;void displayVal(ui8 val){
-; 0000 00B8 void displayVal(ui8 val){
 ;PCODE: $00000326 VOL: 0
 ;PCODE: $00000327 VOL: 0
-; 0000 00B9     ui8 value;
-; 0000 00BA     if(val > 85){
 ;PCODE: $00000328 VOL: 0
-;	val -> Y+1
-;	value -> R17
 ;PCODE: $00000329 VOL: 0
 ;PCODE: $0000032A VOL: 0
 ;PCODE: $0000032B VOL: 0
-; 0000 00BB         value = (val - 85) / 34;
 ;PCODE: $0000032C VOL: 0
 ;PCODE: $0000032D VOL: 0
 ;PCODE: $0000032E VOL: 0
 ;PCODE: $0000032F VOL: 0
 ;PCODE: $00000330 VOL: 0
 ;PCODE: $00000331 VOL: 0
+; 0000 00B0         toggleOut2State();
 ;PCODE: $00000332 VOL: 0
-; 0000 00BC         switch(value){
+; 0000 00B1     }
+; 0000 00B2     lastPortBValue = PINB;
 ;PCODE: $00000333 VOL: 0
 ;PCODE: $00000334 VOL: 0
-; 0000 00BD             case(1):{
 ;PCODE: $00000335 VOL: 0
 ;PCODE: $00000336 VOL: 0
-; 0000 00BE                 PORTD.4 = 1;
 ;PCODE: $00000337 VOL: 0
 ;PCODE: $00000338 VOL: 0
-; 0000 00BF                 PORTD.3 = 0;
 ;PCODE: $00000339 VOL: 0
+; 0000 00B3 }
 ;PCODE: $0000033A VOL: 0
-; 0000 00C0                 PORTD.2 = 0;
 ;PCODE: $0000033B VOL: 0
 ;PCODE: $0000033C VOL: 0
-; 0000 00C1                 PORTA.0 = 0;
+;
+;void displayVal(ui8 val){
+; 0000 00B5 void displayVal(ui8 val){
 ;PCODE: $0000033D VOL: 0
 ;PCODE: $0000033E VOL: 0
-; 0000 00C2                 PORTA.1 = 0;
+; 0000 00B6     ui8 value;
+; 0000 00B7     PORTD.4 = 0;
 ;PCODE: $0000033F VOL: 0
+;	val -> Y+1
+;	value -> R17
 ;PCODE: $00000340 VOL: 0
-; 0000 00C3                 break;
 ;PCODE: $00000341 VOL: 0
-; 0000 00C4             }
-; 0000 00C5             case(2):{
+; 0000 00B8     PORTD.3 = 0;
 ;PCODE: $00000342 VOL: 0
 ;PCODE: $00000343 VOL: 0
+; 0000 00B9     PORTD.2 = 0;
 ;PCODE: $00000344 VOL: 0
-; 0000 00C6                 PORTD.4 = 1;
 ;PCODE: $00000345 VOL: 0
+; 0000 00BA     PORTA.0 = 0;
 ;PCODE: $00000346 VOL: 0
-; 0000 00C7                 PORTD.3 = 1;
 ;PCODE: $00000347 VOL: 0
+; 0000 00BB     PORTA.1 = 0;
 ;PCODE: $00000348 VOL: 0
-; 0000 00C8                 PORTD.2 = 0;
 ;PCODE: $00000349 VOL: 0
+; 0000 00BC     if(val > 85){
 ;PCODE: $0000034A VOL: 0
-; 0000 00C9                 PORTA.0 = 0;
 ;PCODE: $0000034B VOL: 0
 ;PCODE: $0000034C VOL: 0
-; 0000 00CA                 PORTA.1 = 0;
+; 0000 00BD         value = (val - 85) / 34;
 ;PCODE: $0000034D VOL: 0
 ;PCODE: $0000034E VOL: 0
-; 0000 00CB                 break;
 ;PCODE: $0000034F VOL: 0
-; 0000 00CC             }
-; 0000 00CD             case(3):{
 ;PCODE: $00000350 VOL: 0
 ;PCODE: $00000351 VOL: 0
 ;PCODE: $00000352 VOL: 0
-; 0000 00CE                 PORTD.4 = 1;
 ;PCODE: $00000353 VOL: 0
+; 0000 00BE         switch(value){
 ;PCODE: $00000354 VOL: 0
-; 0000 00CF                 PORTD.3 = 1;
 ;PCODE: $00000355 VOL: 0
+; 0000 00BF             case(1):{
 ;PCODE: $00000356 VOL: 0
-; 0000 00D0                 PORTD.2 = 1;
 ;PCODE: $00000357 VOL: 0
+; 0000 00C0                 PORTD.4 = 1;
 ;PCODE: $00000358 VOL: 0
-; 0000 00D1                 PORTA.0 = 0;
 ;PCODE: $00000359 VOL: 0
+; 0000 00C1                 PORTD.3 = 0;
 ;PCODE: $0000035A VOL: 0
-; 0000 00D2                 PORTA.1 = 0;
 ;PCODE: $0000035B VOL: 0
+; 0000 00C2                 PORTD.2 = 0;
 ;PCODE: $0000035C VOL: 0
-; 0000 00D3                 break;
 ;PCODE: $0000035D VOL: 0
-; 0000 00D4             }
-; 0000 00D5             case(4):{
+; 0000 00C3                 PORTA.0 = 0;
 ;PCODE: $0000035E VOL: 0
 ;PCODE: $0000035F VOL: 0
+; 0000 00C4                 PORTA.1 = 0;
 ;PCODE: $00000360 VOL: 0
-; 0000 00D6                 PORTD.4 = 1;
 ;PCODE: $00000361 VOL: 0
+; 0000 00C5                 break;
 ;PCODE: $00000362 VOL: 0
-; 0000 00D7                 PORTD.3 = 1;
+; 0000 00C6             }
+; 0000 00C7             case(2):{
 ;PCODE: $00000363 VOL: 0
 ;PCODE: $00000364 VOL: 0
-; 0000 00D8                 PORTD.2 = 1;
 ;PCODE: $00000365 VOL: 0
+; 0000 00C8                 PORTD.4 = 1;
 ;PCODE: $00000366 VOL: 0
-; 0000 00D9                 PORTA.0 = 1;
 ;PCODE: $00000367 VOL: 0
+; 0000 00C9                 PORTD.3 = 1;
 ;PCODE: $00000368 VOL: 0
-; 0000 00DA                 PORTA.1 = 0;
 ;PCODE: $00000369 VOL: 0
+; 0000 00CA                 PORTD.2 = 0;
 ;PCODE: $0000036A VOL: 0
-; 0000 00DB                 break;
 ;PCODE: $0000036B VOL: 0
-; 0000 00DC             }
-; 0000 00DD             case(5):{
+; 0000 00CB                 PORTA.0 = 0;
 ;PCODE: $0000036C VOL: 0
 ;PCODE: $0000036D VOL: 0
+; 0000 00CC                 PORTA.1 = 0;
 ;PCODE: $0000036E VOL: 0
-; 0000 00DE                 PORTD.4 = 1;
 ;PCODE: $0000036F VOL: 0
+; 0000 00CD                 break;
 ;PCODE: $00000370 VOL: 0
-; 0000 00DF                 PORTD.3 = 1;
+; 0000 00CE             }
+; 0000 00CF             case(3):{
 ;PCODE: $00000371 VOL: 0
 ;PCODE: $00000372 VOL: 0
-; 0000 00E0                 PORTD.2 = 1;
 ;PCODE: $00000373 VOL: 0
+; 0000 00D0                 PORTD.4 = 1;
 ;PCODE: $00000374 VOL: 0
-; 0000 00E1                 PORTA.0 = 1;
 ;PCODE: $00000375 VOL: 0
+; 0000 00D1                 PORTD.3 = 1;
 ;PCODE: $00000376 VOL: 0
-; 0000 00E2                 PORTA.1 = 1;
 ;PCODE: $00000377 VOL: 0
+; 0000 00D2                 PORTD.2 = 1;
 ;PCODE: $00000378 VOL: 0
-; 0000 00E3                 break;
 ;PCODE: $00000379 VOL: 0
-; 0000 00E4             }
-; 0000 00E5         }
+; 0000 00D3                 PORTA.0 = 0;
 ;PCODE: $0000037A VOL: 0
-; 0000 00E6     }
-; 0000 00E7     PORTD.6 = !!val;//first led
 ;PCODE: $0000037B VOL: 0
+; 0000 00D4                 PORTA.1 = 0;
 ;PCODE: $0000037C VOL: 0
 ;PCODE: $0000037D VOL: 0
+; 0000 00D5                 break;
 ;PCODE: $0000037E VOL: 0
+; 0000 00D6             }
+; 0000 00D7             case(4):{
 ;PCODE: $0000037F VOL: 0
 ;PCODE: $00000380 VOL: 0
 ;PCODE: $00000381 VOL: 0
+; 0000 00D8                 PORTD.4 = 1;
 ;PCODE: $00000382 VOL: 0
 ;PCODE: $00000383 VOL: 0
+; 0000 00D9                 PORTD.3 = 1;
 ;PCODE: $00000384 VOL: 0
 ;PCODE: $00000385 VOL: 0
-; 0000 00E8 }
+; 0000 00DA                 PORTD.2 = 1;
 ;PCODE: $00000386 VOL: 0
 ;PCODE: $00000387 VOL: 0
+; 0000 00DB                 PORTA.0 = 1;
 ;PCODE: $00000388 VOL: 0
 ;PCODE: $00000389 VOL: 0
+; 0000 00DC                 PORTA.1 = 0;
 ;PCODE: $0000038A VOL: 0
-;
-;void main(void){
-; 0000 00EA void main(void){
 ;PCODE: $0000038B VOL: 0
-; 0000 00EB ui8 toggler = 0;
-; 0000 00EC     // Crystal Oscillator division factor: 1
-; 0000 00ED #pragma optsize-
-; 0000 00EE CLKPR=0x80;
-;	toggler -> R17
+; 0000 00DD                 break;
 ;PCODE: $0000038C VOL: 0
+; 0000 00DE             }
+; 0000 00DF             case(5):{
 ;PCODE: $0000038D VOL: 0
 ;PCODE: $0000038E VOL: 0
 ;PCODE: $0000038F VOL: 0
-; 0000 00EF CLKPR=0x00;
+; 0000 00E0                 PORTD.4 = 1;
 ;PCODE: $00000390 VOL: 0
 ;PCODE: $00000391 VOL: 0
-; 0000 00F0 #ifdef _OPTIMIZE_SIZE_
-; 0000 00F1 #pragma optsize+
-; 0000 00F2 #endif
-; 0000 00F3 
-; 0000 00F4     configure();
+; 0000 00E1                 PORTD.3 = 1;
 ;PCODE: $00000392 VOL: 0
-; 0000 00F5 
-; 0000 00F6     restorePwmValues();
 ;PCODE: $00000393 VOL: 0
-; 0000 00F7 
-; 0000 00F8     usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
+; 0000 00E2                 PORTD.2 = 1;
 ;PCODE: $00000394 VOL: 0
 ;PCODE: $00000395 VOL: 0
+; 0000 00E3                 PORTA.0 = 1;
 ;PCODE: $00000396 VOL: 0
 ;PCODE: $00000397 VOL: 0
+; 0000 00E4                 PORTA.1 = 1;
 ;PCODE: $00000398 VOL: 0
 ;PCODE: $00000399 VOL: 0
+; 0000 00E5                 break;
 ;PCODE: $0000039A VOL: 0
+; 0000 00E6             }
+; 0000 00E7         }
 ;PCODE: $0000039B VOL: 0
+; 0000 00E8     }
+; 0000 00E9     PORTD.6 = !!val;//first led
 ;PCODE: $0000039C VOL: 0
-; 0000 00F9     #asm("sei")
 ;PCODE: $0000039D VOL: 0
-	sei
 ;PCODE: $0000039E VOL: 0
-; 0000 00FA 
-; 0000 00FB     while (1){
 ;PCODE: $0000039F VOL: 0
-; 0000 00FC         if(!settingTarget){
 ;PCODE: $000003A0 VOL: 0
 ;PCODE: $000003A1 VOL: 0
 ;PCODE: $000003A2 VOL: 0
 ;PCODE: $000003A3 VOL: 0
-; 0000 00FD             displayVal(OCR0A);
 ;PCODE: $000003A4 VOL: 0
 ;PCODE: $000003A5 VOL: 0
 ;PCODE: $000003A6 VOL: 0
-; 0000 00FE         }else{
+; 0000 00EA }
 ;PCODE: $000003A7 VOL: 0
 ;PCODE: $000003A8 VOL: 0
-; 0000 00FF             if(toggler)
 ;PCODE: $000003A9 VOL: 0
 ;PCODE: $000003AA VOL: 0
-; 0000 0100                 displayVal(OCR0B);
 ;PCODE: $000003AB VOL: 0
+;
+;void main(void){
+; 0000 00EC void main(void){
 ;PCODE: $000003AC VOL: 0
+; 0000 00ED ui8 toggler = 0;
+; 0000 00EE     // Crystal Oscillator division factor: 1
+; 0000 00EF #pragma optsize-
+; 0000 00F0 CLKPR=0x80;
+;	toggler -> R17
 ;PCODE: $000003AD VOL: 0
-; 0000 0101             else
 ;PCODE: $000003AE VOL: 0
 ;PCODE: $000003AF VOL: 0
-; 0000 0102                 displayVal(0);
 ;PCODE: $000003B0 VOL: 0
+; 0000 00F1 CLKPR=0x00;
 ;PCODE: $000003B1 VOL: 0
 ;PCODE: $000003B2 VOL: 0
-; 0000 0103             toggler = !toggler;
+; 0000 00F2 #ifdef _OPTIMIZE_SIZE_
+; 0000 00F3 #pragma optsize+
+; 0000 00F4 #endif
+; 0000 00F5 
+; 0000 00F6     configure();
 ;PCODE: $000003B3 VOL: 0
+; 0000 00F7 
+; 0000 00F8     restorePwmValues();
 ;PCODE: $000003B4 VOL: 0
+; 0000 00F9 
+; 0000 00FA    // OCR0A = 255;
+; 0000 00FB   //  OCR0B = 255;
+; 0000 00FC 
+; 0000 00FD    // usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
+; 0000 00FE     #asm("sei")
 ;PCODE: $000003B5 VOL: 0
+	sei
 ;PCODE: $000003B6 VOL: 0
-; 0000 0104             delay_ms(LedDelay);
+; 0000 00FF 
+; 0000 0100     while (1){
 ;PCODE: $000003B7 VOL: 0
+; 0000 0101 
+; 0000 0102         PORTD.0 = !!(outputStates & 1);
 ;PCODE: $000003B8 VOL: 0
 ;PCODE: $000003B9 VOL: 0
-; 0000 0105         }
 ;PCODE: $000003BA VOL: 0
-; 0000 0106         PORTD.0 = !!(outputStates & 1);
 ;PCODE: $000003BB VOL: 0
 ;PCODE: $000003BC VOL: 0
 ;PCODE: $000003BD VOL: 0
@@ -1638,10 +1635,10 @@
 ;PCODE: $000003BF VOL: 0
 ;PCODE: $000003C0 VOL: 0
 ;PCODE: $000003C1 VOL: 0
+; 0000 0103         PORTD.1 = !!(outputStates & 2);
 ;PCODE: $000003C2 VOL: 0
 ;PCODE: $000003C3 VOL: 0
 ;PCODE: $000003C4 VOL: 0
-; 0000 0107         PORTD.1 = !!(outputStates & 2);
 ;PCODE: $000003C5 VOL: 0
 ;PCODE: $000003C6 VOL: 0
 ;PCODE: $000003C7 VOL: 0
@@ -1649,13 +1646,47 @@
 ;PCODE: $000003C9 VOL: 0
 ;PCODE: $000003CA VOL: 0
 ;PCODE: $000003CB VOL: 0
+; 0000 0104         if(!settingTarget){
 ;PCODE: $000003CC VOL: 0
 ;PCODE: $000003CD VOL: 0
 ;PCODE: $000003CE VOL: 0
-; 0000 0108     };
 ;PCODE: $000003CF VOL: 0
+; 0000 0105             displayVal(OCR0A);
 ;PCODE: $000003D0 VOL: 0
-; 0000 0109 }
 ;PCODE: $000003D1 VOL: 0
 ;PCODE: $000003D2 VOL: 0
+; 0000 0106         }else{
 ;PCODE: $000003D3 VOL: 0
+;PCODE: $000003D4 VOL: 0
+; 0000 0107             if(toggler)
+;PCODE: $000003D5 VOL: 0
+;PCODE: $000003D6 VOL: 0
+; 0000 0108                 displayVal(OCR0B);
+;PCODE: $000003D7 VOL: 0
+;PCODE: $000003D8 VOL: 0
+;PCODE: $000003D9 VOL: 0
+; 0000 0109             else
+;PCODE: $000003DA VOL: 0
+;PCODE: $000003DB VOL: 0
+; 0000 010A                 displayVal(0);
+;PCODE: $000003DC VOL: 0
+;PCODE: $000003DD VOL: 0
+;PCODE: $000003DE VOL: 0
+; 0000 010B             toggler = !toggler;
+;PCODE: $000003DF VOL: 0
+;PCODE: $000003E0 VOL: 0
+;PCODE: $000003E1 VOL: 0
+;PCODE: $000003E2 VOL: 0
+; 0000 010C             delay_ms(LedDelay);
+;PCODE: $000003E3 VOL: 0
+;PCODE: $000003E4 VOL: 0
+;PCODE: $000003E5 VOL: 0
+; 0000 010D         }
+;PCODE: $000003E6 VOL: 0
+; 0000 010E     };
+;PCODE: $000003E7 VOL: 0
+;PCODE: $000003E8 VOL: 0
+; 0000 010F }
+;PCODE: $000003E9 VOL: 0
+;PCODE: $000003EA VOL: 0
+;PCODE: $000003EB VOL: 0

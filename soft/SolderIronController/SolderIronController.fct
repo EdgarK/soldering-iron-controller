@@ -1,3 +1,3 @@
-main DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"SolderIronController.c" LINE:234
-usi_twi_slave DSTACK_USAGE:7 DSTACK_LEVEL:7 FILE:"twiOverUsi.c" LINE:252
-usi_ovf_isr DSTACK_USAGE:16 DSTACK_LEVEL:23 FILE:"twiOverUsi.c" LINE:158
+main DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"SolderIronController.c" LINE:236
+displayVal DSTACK_USAGE:2 DSTACK_LEVEL:2 FILE:"SolderIronController.c" LINE:181
+usi_ovf_isr DSTACK_USAGE:16 DSTACK_LEVEL:18 FILE:"twiOverUsi.c" LINE:158

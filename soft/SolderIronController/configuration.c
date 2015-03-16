@@ -28,7 +28,7 @@ static void configure(void){
     // OC0A output: Non-Inverted PWM
     // OC0B output: Non-Inverted PWM
     TCCR0A=0xA3;
-    TCCR0B=0x04;
+    TCCR0B=0x03;
     OCR0B=OCR0A=TCNT0=0x00;
 
     // Clock value: Timer1 Stopped
@@ -40,7 +40,7 @@ static void configure(void){
     // Interrupt on any change on pins PCINT0-7: On
     GIMSK=0x20;
     MCUCR=0x00;
-    PCMSK=0x5B;
+    PCMSK=0b1011011;
     EIFR=0x20;
 
     // Timer(s)/Counter(s) Interrupt(s) initialization

@@ -70,36 +70,43 @@ static void on_twi_receive(uint8_t input_buffer_length, const uint8_t *input_buf
 }
 
 void restorePwmValues(void){
-    OCR0A = (char) pwmValues >> 8;
-    OCR0B = (char) pwmValues;
+    OCR0A = (ui8) (pwmValues >> 8);
+    OCR0B = (ui8) pwmValues;
 }                   
 
 void savePwmValues(void){
     ui16 buffer = 0;
     
-    buffer = OCR0A << 8;
+    buffer = OCR0A;
+    buffer = buffer << 8; 
     buffer |= OCR0B;
     pwmValues = buffer;
 }    
 
 static void increasePwm(void){
     if(!settingTarget){
-        if(OCR0A < 0xFF)
-            OCR0A++;
+        if(OCR0A > 0xFD) OCR0A = 0xFF;
+        if(OCR0A < 0xFF){
+            OCR0A += 2;
+        }
     }else{
-        if(OCR0B < 0xFF)
-            OCR0B++;
+        if(OCR0B > 0xFD) OCR0B = 0xFF;
+        if(OCR0B < 0xFF){
+            OCR0B += 2;
+        }
     }
     savePwmValues();
 }
 
 static void decreasePwm(void){
     if(!settingTarget){
+        if(OCR0A == 1) OCR0A = 0;
         if(OCR0A > 0)
-            OCR0A--;
-    }else{
+            OCR0A -= 2;
+    }else{           
+        if(OCR0B == 1) OCR0B = 0;
         if(OCR0B > 0)
-            OCR0B--;
+            OCR0B -= 2;
     }   
     savePwmValues();
 }
@@ -147,42 +154,37 @@ void toggleOut2State(void){
    
 // Pin change 0-7 interrupt service routine
 interrupt [PC_INT] void pin_change_isr0(void){
-    if((lastPortBValue & (1<<4)) != (PINB & (1<<4))){
-        if(!PINB.4){
-            if(PINB.3)
-                increasePwm();
+    if(BV(lastPortBValue,4) != BV(PINB,4)){
+        if(!BV(PINB, 4)){
+            if(BV(PINB, 3))
+                decreasePwm();//1
             else
-                decreasePwm();
+                increasePwm();//2
         }else{
-            if(!PINB.3)
+            if(BV(PINB, 3))
                 increasePwm();
             else
                 decreasePwm();
-        }
-    }else if((lastPortBValue & (1<<3)) != (PINB & (1<<3))){
-        if(!PINB.3){
-            if(!PINB.4)
-                increasePwm();
-            else
-                decreasePwm();
-        }else{
-            if(PINB.4)
-                increasePwm();
-            else
-                decreasePwm();
-        }
-    }else if(((lastPortBValue & (1<<6)) != (PINB & (1<<6))) && !PINB.6){
+        } 
+    }else if(BV(lastPortBValue,3) != BV(PINB,3)){
+
+    }else if((BV(lastPortBValue, 6) != BV(PINB,6)) && BV(PINB, 6)){
         toggleTarget();
     }else if(((lastPortBValue & (1<<1)) != (PINB & (1<<1))) && !PINB.1){  
         toggleOut1State();        
     }else if(((lastPortBValue & 1) != (PINB & 1)) && !PINB.0){
         toggleOut2State();
     } 
-    lastPortBValue = PORTB;
+    lastPortBValue = PINB;
 }
  
 void displayVal(ui8 val){
     ui8 value;
+    PORTD.4 = 0;
+    PORTD.3 = 0;
+    PORTD.2 = 0;
+    PORTA.0 = 0;
+    PORTA.1 = 0;
     if(val > 85){
         value = (val - 85) / 34; 
         switch(value){
@@ -244,11 +246,17 @@ CLKPR=0x00;
     configure();
 
     restorePwmValues();
-
-    usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
+    
+   // OCR0A = 255;
+  //  OCR0B = 255;
+    
+   // usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
     #asm("sei")
 
     while (1){
+        
+        PORTD.0 = !!(outputStates & 1);
+        PORTD.1 = !!(outputStates & 2);
         if(!settingTarget){
             displayVal(OCR0A);    
         }else{
@@ -258,8 +266,6 @@ CLKPR=0x00;
                 displayVal(0);
             toggler = !toggler;
             delay_ms(LedDelay); 
-        }
-        PORTD.0 = !!(outputStates & 1);
-        PORTD.1 = !!(outputStates & 2);  
+        }  
     };
 }

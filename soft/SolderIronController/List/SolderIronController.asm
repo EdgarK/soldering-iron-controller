@@ -981,13 +981,13 @@ __DELAY_USW_LOOP:
 	RJMP 0x00
 	RJMP 0x00
 
-_0xA8:
+_0xB0:
 	.DB  0x0,0x0
 
 __GLOBAL_INI_TBL:
 	.DW  0x02
 	.DW  0x04
-	.DW  _0xA8*2
+	.DW  _0xB0*2
 
 _0xFFFFFFFF:
 	.DW  0
@@ -1106,6 +1106,7 @@ __GLOBAL_INI_END:
 ;
 ;#include <generalCompatabilityDefinitions.c>
 ;#define _BV(bit)    (1 << (bit))
+;#define BV(byte, num) ((byte>>num)&1)
 ;
 ;#ifndef NULL
 ;    #define NULL 0
@@ -1265,7 +1266,6 @@ _twi_reset_G000:
 ;
 ;static inline void twi_init(void)
 ;{
-_twi_init_G000:
 ;    #if defined(USIPP)
 ;        #if defined(USI_ON_PORT_A)
 ;            USIPP |= _BV(USIPOS);
@@ -1274,9 +1274,7 @@ _twi_init_G000:
 ;        # endif
 ;    #endif
 ;    twi_reset();
-	RCALL _twi_reset_G000
 ;}
-	RET
 ;
 ;
 ;// USI start condition interrupt service routine
@@ -1312,7 +1310,7 @@ _0x5:
 ;        twi_reset();
 	RCALL _twi_reset_G000
 ;        return;
-	RJMP _0xA7
+	RJMP _0xAF
 ;    }
 ;
 ;    of_state = of_state_check_address;
@@ -1342,7 +1340,7 @@ _0x8:
 	LDI  R30,LOW(208)
 	OUT  0xE,R30
 ;}
-	RJMP _0xA7
+	RJMP _0xAF
 ;
 ;
 ;// USI counter overflow interrupt service routine
@@ -1399,12 +1397,12 @@ _0x9:
 	BREQ _0xF
 ;                    of_state = of_state_send_data;
 	LDI  R30,LOW(1)
-	RJMP _0xA2
+	RJMP _0xAA
 ;                }else{    // write request from master
 _0xF:
 ;                    of_state = of_state_receive_data;
 	LDI  R30,LOW(4)
-_0xA2:
+_0xAA:
 	STS  _of_state_G000,R30
 ;                }
 ;                USIDR = 0x00;
@@ -1434,7 +1432,9 @@ _0x11:
 ;        // process read request from master
 ;        case(of_state_send_data):{
 _0xD:
-	RCALL SUBOPT_0x5
+	CPI  R30,LOW(0x1)
+	LDI  R26,HIGH(0x1)
+	CPC  R31,R26
 	BRNE _0x12
 ;            ss_state = ss_state_data_processed;
 	LDI  R30,LOW(4)
@@ -1454,18 +1454,18 @@ _0xD:
 	SUBI R30,LOW(1)
 	SUBI R30,-LOW(_output_buffer_G000)
 	LD   R30,Z
-	RJMP _0xA3
+	RJMP _0xAB
 ;            }else{
 _0x13:
 ;                USIDR = 0x00; // no more data, but cannot send "nothing" or "nak"
 	LDI  R30,LOW(0)
-_0xA3:
+_0xAB:
 	OUT  0xF,R30
 ;            }
 ;            set_counter = 0x00;
 	LDI  R16,LOW(0)
 ;            set_sda_to_output(); // initiate send data
-	RJMP _0xA4
+	RJMP _0xAC
 ;            break;
 ;        }
 ;        // data sent to master, request ack (or nack) from master
@@ -1520,7 +1520,9 @@ _0x18:
 ;        // process write request from master
 ;        case(of_state_receive_data):{
 _0x16:
-	RCALL SUBOPT_0x6
+	CPI  R30,LOW(0x4)
+	LDI  R26,HIGH(0x4)
+	CPC  R31,R26
 	BRNE _0x19
 ;            ss_state = ss_state_data_processed;
 	LDI  R30,LOW(4)
@@ -1563,7 +1565,7 @@ _0x1B:
 ;            set_counter = 0x0e; // send 1 bit (2 edges)
 	LDI  R16,LOW(14)
 ;            set_sda_to_output(); // initiate send ack
-_0xA4:
+_0xAC:
 	RCALL _set_sda_to_output_G000
 ;            break;
 ;        }
@@ -1580,133 +1582,62 @@ _0xC:
 	OUT  0xE,R30
 ;}
 	RCALL __LOADLOCR2P
-	RJMP _0xA7
+	RJMP _0xAF
 ;
 ;void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_callback_in)(uint8_t input_buffer_length,
 ;                    const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer),void (*idle_callback_in)(void)){
-_usi_twi_slave:
 ;    uint8_t	call_datacallback = 0;
 ;    slave_address = slave_address_in;
-	ST   -Y,R17
 ;	slave_address_in -> Y+6
 ;	use_sleep -> Y+5
 ;	*data_callback_in -> Y+3
 ;	*idle_callback_in -> Y+1
 ;	call_datacallback -> R17
-	LDI  R17,0
-	LDD  R30,Y+6
-	STS  _slave_address_G000,R30
 ;    data_callback = data_callback_in;
-	LDD  R30,Y+3
-	LDD  R31,Y+3+1
-	STS  _data_callback_G000,R30
-	STS  _data_callback_G000+1,R31
 ;    idle_callback = idle_callback_in;
-	LDD  R30,Y+1
-	LDD  R31,Y+1+1
-	STS  _idle_callback_G000,R30
-	STS  _idle_callback_G000+1,R31
 ;    input_buffer_length = 0;
-	LDI  R30,LOW(0)
-	STS  _input_buffer_length_G000,R30
 ;    output_buffer_length = 0;
-	RCALL SUBOPT_0x7
 ;    output_buffer_current = 0;
 ;    ss_state = ss_state_before_start;
-	LDI  R30,LOW(0)
-	RCALL SUBOPT_0x2
 ;//    if(use_sleep){
 ;//        set_sleep_mode(SLEEP_MODE_IDLE);
 ;//    }
 ;    twi_init();
-	RCALL _twi_init_G000
 ;    #asm("sei")
-	sei
 ;    for(;;){
-_0x1D:
 ;        if(idle_callback){
-	RCALL SUBOPT_0x8
-	SBIW R30,0
-	BREQ _0x1F
 ;            idle_callback();
-	RCALL SUBOPT_0x8
-	ICALL
 ;        }
 ;
 ;        if(use_sleep && (ss_state == ss_state_before_start)){
-_0x1F:
 ;            //sleep_mode();
 ;        }
 ;
 ;        if(USISR & _BV(USIPF)){
-	SBIS 0xE,5
-	RJMP _0x23
 ;            #asm("cli")
-	cli
 ;            USISR |= _BV(USIPF); // clear stop condition flag
-	SBI  0xE,5
 ;            switch(ss_state){
-	LDS  R30,_ss_state_G000
-	RCALL SUBOPT_0x3
 ;                case(ss_state_after_start):{
-	RCALL SUBOPT_0x5
-	BRNE _0x27
 ;                    twi_reset();
-	RCALL _twi_reset_G000
 ;                    break;
-	RJMP _0x26
 ;                }
 ;
 ;                case(ss_state_data_processed):{
-_0x27:
-	RCALL SUBOPT_0x6
-	BRNE _0x26
 ;                    call_datacallback = 1;
-	LDI  R17,LOW(1)
 ;                    break;
 ;                }
 ;            }
-_0x26:
 ;            ss_state = ss_state_before_start;
-	LDI  R30,LOW(0)
-	RCALL SUBOPT_0x2
 ;            #asm("sei")
-	sei
 ;        }
 ;        if(call_datacallback){
-_0x23:
-	CPI  R17,0
-	BREQ _0x29
 ;            output_buffer_length = 0;
-	RCALL SUBOPT_0x7
 ;            output_buffer_current = 0;
 ;            data_callback(input_buffer_length, input_buffer, &output_buffer_length, output_buffer);
-	LDI  R30,LOW(_data_callback_G000)
-	LDI  R31,HIGH(_data_callback_G000)
-	MOV  R26,R30
-	RCALL __GETW1P
-	PUSH R31
-	PUSH R30
-	LDS  R30,_input_buffer_length_G000
-	ST   -Y,R30
-	LDI  R30,LOW(_input_buffer_G000)
-	ST   -Y,R30
-	LDI  R30,LOW(_output_buffer_length_G000)
-	ST   -Y,R30
-	LDI  R30,LOW(_output_buffer_G000)
-	ST   -Y,R30
-	POP  R30
-	POP  R31
-	ICALL
 ;            input_buffer_length = 0;
-	LDI  R30,LOW(0)
-	STS  _input_buffer_length_G000,R30
 ;            call_datacallback = 0;
-	LDI  R17,LOW(0)
 ;        }
 ;    }
-_0x29:
-	RJMP _0x1D
 ;}
 ;
 ;#include <configuration.c>
@@ -1755,8 +1686,8 @@ _configure_G000:
 ;    TCCR0A=0xA3;
 	LDI  R30,LOW(163)
 	OUT  0x30,R30
-;    TCCR0B=0x04;
-	LDI  R30,LOW(4)
+;    TCCR0B=0x03;
+	LDI  R30,LOW(3)
 	OUT  0x33,R30
 ;    OCR0B=OCR0A=TCNT0=0x00;
 	LDI  R30,LOW(0)
@@ -1787,7 +1718,7 @@ _configure_G000:
 ;    MCUCR=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x35,R30
-;    PCMSK=0x5B;
+;    PCMSK=0b1011011;
 	LDI  R30,LOW(91)
 	OUT  0x20,R30
 ;    EIFR=0x20;
@@ -1823,109 +1754,49 @@ _configure_G000:
 ;
 ;static void responde(uint8_t *output_buffer_length, uint8_t *output_buffer){
 ; 0000 002E static void responde(uint8_t *output_buffer_length, uint8_t *output_buffer){
-_responde_G000:
 ; 0000 002F     *output_buffer_length = 3;
 ;	*output_buffer_length -> Y+1
 ;	*output_buffer -> Y+0
-	LDD  R26,Y+1
-	LDI  R30,LOW(3)
-	ST   X,R30
 ; 0000 0030     output_buffer[0] = OCR0A;
-	IN   R30,0x36
-	LD   R26,Y
-	ST   X,R30
 ; 0000 0031     output_buffer[1] = OCR0B;
-	SUBI R26,-LOW(1)
-	IN   R30,0x3C
-	ST   X,R30
 ; 0000 0032     output_buffer[2] = outputStates;
-	LD   R30,Y
-	__PUTBZR 5,2
 ; 0000 0033 }
-	RJMP _0x2000001
 ;static void on_twi_receive(uint8_t input_buffer_length, const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer){
 ; 0000 0034 static void on_twi_receive(uint8_t input_buffer_length, const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer){
-_on_twi_receive_G000:
 ; 0000 0035     if(input_buffer_length != 2){
 ;	input_buffer_length -> Y+3
 ;	*input_buffer -> Y+2
 ;	*output_buffer_length -> Y+1
 ;	*output_buffer -> Y+0
-	LDD  R26,Y+3
-	CPI  R26,LOW(0x2)
-	BRNE _0x2000005
 ; 0000 0036         responde(output_buffer_length, output_buffer);
 ; 0000 0037         return;
 ; 0000 0038     }
 ; 0000 0039 
 ; 0000 003A     if(input_buffer[0] & 1){//zero bit
-	RCALL SUBOPT_0x9
-	ANDI R30,LOW(0x1)
-	BREQ _0x2B
 ; 0000 003B         setOut1StateTo(input_buffer[1] & 1);
-	RCALL SUBOPT_0xA
-	RCALL _setOut1StateTo
 ; 0000 003C     }else if(input_buffer[0] & 2){// first
-	RJMP _0x2C
-_0x2B:
-	RCALL SUBOPT_0x9
-	ANDI R30,LOW(0x2)
-	BREQ _0x2D
 ; 0000 003D         setOut2StateTo(input_buffer[1] & 1);
-	RCALL SUBOPT_0xA
-	RCALL _setOut2StateTo
 ; 0000 003E     }else if(input_buffer[0] & 4){
-	RJMP _0x2E
-_0x2D:
-	RCALL SUBOPT_0x9
-	ANDI R30,LOW(0x4)
-	BREQ _0x2F
 ; 0000 003F         OCR0A = input_buffer[1];
-	LDD  R26,Y+2
-	SUBI R26,-LOW(1)
-	LD   R30,X
-	OUT  0x36,R30
 ; 0000 0040         savePwmValues();
-	RJMP _0xA5
 ; 0000 0041     }else if(input_buffer[0] & 8){
-_0x2F:
-	RCALL SUBOPT_0x9
-	ANDI R30,LOW(0x8)
-	BREQ _0x31
 ; 0000 0042         OCR0B = input_buffer[1];
-	LDD  R26,Y+2
-	SUBI R26,-LOW(1)
-	LD   R30,X
-	OUT  0x3C,R30
 ; 0000 0043         savePwmValues();
-_0xA5:
-	RCALL _savePwmValues
 ; 0000 0044     }
 ; 0000 0045     responde(output_buffer_length, output_buffer);
-_0x31:
-_0x2E:
-_0x2C:
-_0x2000005:
-	LDD  R30,Y+1
-	ST   -Y,R30
-	LDD  R30,Y+1
-	ST   -Y,R30
-	RCALL _responde_G000
 ; 0000 0046 }
-	ADIW R28,4
-	RET
 ;
 ;void restorePwmValues(void){
 ; 0000 0048 void restorePwmValues(void){
 _restorePwmValues:
-; 0000 0049     OCR0A = (char) pwmValues >> 8;
+; 0000 0049     OCR0A = (ui8) (pwmValues >> 8);
 	LDI  R26,LOW(_pwmValues)
 	LDI  R27,HIGH(_pwmValues)
-	RCALL __EEPROMRDB
-	RCALL SUBOPT_0x3
-	RCALL __ASRW8
+	RCALL __EEPROMRDW
+	MOV  R30,R31
+	LDI  R31,0
 	OUT  0x36,R30
-; 0000 004A     OCR0B = (char) pwmValues;
+; 0000 004A     OCR0B = (ui8) pwmValues;
 	LDI  R26,LOW(_pwmValues)
 	LDI  R27,HIGH(_pwmValues)
 	RCALL __EEPROMRDB
@@ -1938,103 +1809,132 @@ _restorePwmValues:
 _savePwmValues:
 ; 0000 004E     ui16 buffer = 0;
 ; 0000 004F 
-; 0000 0050     buffer = OCR0A << 8;
+; 0000 0050     buffer = OCR0A;
 	RCALL __SAVELOCR2
 ;	buffer -> R16,R17
 	__GETWRN 16,17,0
-	IN   R30,0x36
-	MOV  R31,R30
-	LDI  R30,0
-	MOVW R16,R30
-; 0000 0051     buffer |= OCR0B;
+	IN   R16,54
+	CLR  R17
+; 0000 0051     buffer = buffer << 8;
+	MOV  R17,R16
+	CLR  R16
+; 0000 0052     buffer |= OCR0B;
 	IN   R30,0x3C
 	RCALL SUBOPT_0x3
 	__ORWRR 16,17,30,31
-; 0000 0052     pwmValues = buffer;
+; 0000 0053     pwmValues = buffer;
 	MOVW R30,R16
 	LDI  R26,LOW(_pwmValues)
 	LDI  R27,HIGH(_pwmValues)
 	RCALL __EEPROMWRW
-; 0000 0053 }
+; 0000 0054 }
 	RCALL __LOADLOCR2P
 	RET
 ;
 ;static void increasePwm(void){
-; 0000 0055 static void increasePwm(void){
+; 0000 0056 static void increasePwm(void){
 _increasePwm_G000:
-; 0000 0056     if(!settingTarget){
-	RCALL SUBOPT_0xB
+; 0000 0057     if(!settingTarget){
+	RCALL SUBOPT_0x5
 	BRNE _0x32
-; 0000 0057         if(OCR0A < 0xFF)
+; 0000 0058         if(OCR0A > 0xFD) OCR0A = 0xFF;
 	IN   R30,0x36
-	CPI  R30,LOW(0xFF)
-	BRSH _0x33
-; 0000 0058             OCR0A++;
-	IN   R30,0x36
-	SUBI R30,-LOW(1)
+	CPI  R30,LOW(0xFE)
+	BRLO _0x33
+	LDI  R30,LOW(255)
 	OUT  0x36,R30
-	SUBI R30,LOW(1)
-; 0000 0059     }else{
+; 0000 0059         if(OCR0A < 0xFF){
 _0x33:
-	RJMP _0x34
+	IN   R30,0x36
+	CPI  R30,LOW(0xFF)
+	BRSH _0x34
+; 0000 005A             OCR0A += 2;
+	IN   R30,0x36
+	SUBI R30,-LOW(2)
+	OUT  0x36,R30
+; 0000 005B         }
+; 0000 005C     }else{
+_0x34:
+	RJMP _0x35
 _0x32:
-; 0000 005A         if(OCR0B < 0xFF)
+; 0000 005D         if(OCR0B > 0xFD) OCR0B = 0xFF;
+	IN   R30,0x3C
+	CPI  R30,LOW(0xFE)
+	BRLO _0x36
+	LDI  R30,LOW(255)
+	OUT  0x3C,R30
+; 0000 005E         if(OCR0B < 0xFF){
+_0x36:
 	IN   R30,0x3C
 	CPI  R30,LOW(0xFF)
-	BRSH _0x35
-; 0000 005B             OCR0B++;
+	BRSH _0x37
+; 0000 005F             OCR0B += 2;
 	IN   R30,0x3C
-	SUBI R30,-LOW(1)
+	SUBI R30,-LOW(2)
 	OUT  0x3C,R30
-	SUBI R30,LOW(1)
-; 0000 005C     }
+; 0000 0060         }
+; 0000 0061     }
+_0x37:
 _0x35:
-_0x34:
-; 0000 005D     savePwmValues();
-	RJMP _0x2000004
-; 0000 005E }
+; 0000 0062     savePwmValues();
+	RJMP _0x2000003
+; 0000 0063 }
 ;
 ;static void decreasePwm(void){
-; 0000 0060 static void decreasePwm(void){
+; 0000 0065 static void decreasePwm(void){
 _decreasePwm_G000:
-; 0000 0061     if(!settingTarget){
-	RCALL SUBOPT_0xB
-	BRNE _0x36
-; 0000 0062         if(OCR0A > 0)
+; 0000 0066     if(!settingTarget){
+	RCALL SUBOPT_0x5
+	BRNE _0x38
+; 0000 0067         if(OCR0A == 1) OCR0A = 0;
 	IN   R30,0x36
 	CPI  R30,LOW(0x1)
-	BRLO _0x37
-; 0000 0063             OCR0A--;
-	IN   R30,0x36
-	SUBI R30,LOW(1)
+	BRNE _0x39
+	LDI  R30,LOW(0)
 	OUT  0x36,R30
-	SUBI R30,-LOW(1)
-; 0000 0064     }else{
-_0x37:
-	RJMP _0x38
-_0x36:
-; 0000 0065         if(OCR0B > 0)
+; 0000 0068         if(OCR0A > 0)
+_0x39:
+	IN   R30,0x36
+	CPI  R30,LOW(0x1)
+	BRLO _0x3A
+; 0000 0069             OCR0A -= 2;
+	IN   R30,0x36
+	RCALL SUBOPT_0x3
+	SBIW R30,2
+	OUT  0x36,R30
+; 0000 006A     }else{
+_0x3A:
+	RJMP _0x3B
+_0x38:
+; 0000 006B         if(OCR0B == 1) OCR0B = 0;
 	IN   R30,0x3C
 	CPI  R30,LOW(0x1)
-	BRLO _0x39
-; 0000 0066             OCR0B--;
-	IN   R30,0x3C
-	SUBI R30,LOW(1)
+	BRNE _0x3C
+	LDI  R30,LOW(0)
 	OUT  0x3C,R30
-	SUBI R30,-LOW(1)
-; 0000 0067     }
-_0x39:
-_0x38:
-; 0000 0068     savePwmValues();
-_0x2000004:
+; 0000 006C         if(OCR0B > 0)
+_0x3C:
+	IN   R30,0x3C
+	CPI  R30,LOW(0x1)
+	BRLO _0x3D
+; 0000 006D             OCR0B -= 2;
+	IN   R30,0x3C
+	RCALL SUBOPT_0x3
+	SBIW R30,2
+	OUT  0x3C,R30
+; 0000 006E     }
+_0x3D:
+_0x3B:
+; 0000 006F     savePwmValues();
+_0x2000003:
 	RCALL _savePwmValues
-; 0000 0069 }
+; 0000 0070 }
 	RET
 ;
 ;void toggleTarget(void){
-; 0000 006B void toggleTarget(void){
+; 0000 0072 void toggleTarget(void){
 _toggleTarget:
-; 0000 006C     settingTarget = !settingTarget;
+; 0000 0073     settingTarget = !settingTarget;
 	LDI  R26,LOW(_settingTarget)
 	LDI  R27,HIGH(_settingTarget)
 	RCALL __EEPROMRDB
@@ -2042,251 +1942,229 @@ _toggleTarget:
 	LDI  R26,LOW(_settingTarget)
 	LDI  R27,HIGH(_settingTarget)
 	RCALL __EEPROMWRB
-; 0000 006D }
+; 0000 0074 }
 	RET
 ;
 ;void turnOut1On(void){
-; 0000 006F void turnOut1On(void){
+; 0000 0076 void turnOut1On(void){
 _turnOut1On:
-; 0000 0070     DDRB |= 0b00000100;
+; 0000 0077     DDRB |= 0b00000100;
 	SBI  0x17,2
-; 0000 0071     outputStates |= 0b00000001;
+; 0000 0078     outputStates |= 0b00000001;
 	LDI  R30,LOW(1)
 	OR   R5,R30
-; 0000 0072 }
+; 0000 0079 }
 	RET
 ;void turnOut1Off(void){
-; 0000 0073 void turnOut1Off(void){
+; 0000 007A void turnOut1Off(void){
 _turnOut1Off:
-; 0000 0074     DDRB &= 0b11111011; //To disable output just configuring it as an input
+; 0000 007B     DDRB &= 0b11111011; //To disable output just configuring it as an input
 	CBI  0x17,2
-; 0000 0075     outputStates &= 0b11111110;
+; 0000 007C     outputStates &= 0b11111110;
 	LDI  R30,LOW(254)
-	RJMP _0x2000003
-; 0000 0076 }
+	RJMP _0x2000002
+; 0000 007D }
 ;void setOut1StateTo(ui8 isOn){
-; 0000 0077 void setOut1StateTo(ui8 isOn){
+; 0000 007E void setOut1StateTo(ui8 isOn){
 _setOut1StateTo:
-; 0000 0078     if(isOn)
+; 0000 007F     if(isOn)
 ;	isOn -> Y+0
 	LD   R30,Y
 	CPI  R30,0
-	BREQ _0x3A
-; 0000 0079         turnOut1On();
+	BREQ _0x3E
+; 0000 0080         turnOut1On();
 	RCALL _turnOut1On
-; 0000 007A     else
-	RJMP _0x3B
-_0x3A:
-; 0000 007B         turnOut1Off();
+; 0000 0081     else
+	RJMP _0x3F
+_0x3E:
+; 0000 0082         turnOut1Off();
 	RCALL _turnOut1Off
-; 0000 007C }
-_0x3B:
-	RJMP _0x2000002
+; 0000 0083 }
+_0x3F:
+	RJMP _0x2000001
 ;void toggleOut1State(void){
-; 0000 007D void toggleOut1State(void){
+; 0000 0084 void toggleOut1State(void){
 _toggleOut1State:
-; 0000 007E     setOut1StateTo(!(outputStates & 1));
+; 0000 0085     setOut1StateTo(!(outputStates & 1));
 	MOV  R30,R5
 	ANDI R30,LOW(0x1)
 	RCALL __LNEGB1
 	ST   -Y,R30
 	RCALL _setOut1StateTo
-; 0000 007F }
+; 0000 0086 }
 	RET
 ;
 ;void turnOut2On(void){
-; 0000 0081 void turnOut2On(void){
+; 0000 0088 void turnOut2On(void){
 _turnOut2On:
-; 0000 0082     outputStates |= 0b00000010;
+; 0000 0089     outputStates |= 0b00000010;
 	LDI  R30,LOW(2)
 	OR   R5,R30
-; 0000 0083     DDRD |= 0b00100000;
+; 0000 008A     DDRD |= 0b00100000;
 	SBI  0x11,5
-; 0000 0084 }
+; 0000 008B }
 	RET
 ;void turnOut2Off(void){
-; 0000 0085 void turnOut2Off(void){
+; 0000 008C void turnOut2Off(void){
 _turnOut2Off:
-; 0000 0086      DDRD &= 0b11011111;
+; 0000 008D      DDRD &= 0b11011111;
 	CBI  0x11,5
-; 0000 0087      outputStates &= 0b11111101;
+; 0000 008E      outputStates &= 0b11111101;
 	LDI  R30,LOW(253)
-_0x2000003:
+_0x2000002:
 	AND  R5,R30
-; 0000 0088 }
+; 0000 008F }
 	RET
 ;void setOut2StateTo(ui8 isOn){
-; 0000 0089 void setOut2StateTo(ui8 isOn){
+; 0000 0090 void setOut2StateTo(ui8 isOn){
 _setOut2StateTo:
-; 0000 008A     if(isOn)
+; 0000 0091     if(isOn)
 ;	isOn -> Y+0
 	LD   R30,Y
 	CPI  R30,0
-	BREQ _0x3C
-; 0000 008B         turnOut2On();
+	BREQ _0x40
+; 0000 0092         turnOut2On();
 	RCALL _turnOut2On
-; 0000 008C     else
-	RJMP _0x3D
-_0x3C:
-; 0000 008D         turnOut2Off();
+; 0000 0093     else
+	RJMP _0x41
+_0x40:
+; 0000 0094         turnOut2Off();
 	RCALL _turnOut2Off
-; 0000 008E }
-_0x3D:
-_0x2000002:
+; 0000 0095 }
+_0x41:
+_0x2000001:
 	ADIW R28,1
 	RET
 ;void toggleOut2State(void){
-; 0000 008F void toggleOut2State(void){
+; 0000 0096 void toggleOut2State(void){
 _toggleOut2State:
-; 0000 0090     setOut2StateTo(!(outputStates & 2));
+; 0000 0097     setOut2StateTo(!(outputStates & 2));
 	MOV  R30,R5
 	ANDI R30,LOW(0x2)
 	RCALL __LNEGB1
 	ST   -Y,R30
 	RCALL _setOut2StateTo
-; 0000 0091 }
+; 0000 0098 }
 	RET
 ;
 ;
 ;// Pin change 0-7 interrupt service routine
 ;interrupt [PC_INT] void pin_change_isr0(void){
-; 0000 0095 interrupt [12] void pin_change_isr0(void){
+; 0000 009C interrupt [12] void pin_change_isr0(void){
 _pin_change_isr0:
 	RCALL SUBOPT_0x0
-; 0000 0096     if((lastPortBValue & (1<<4)) != (PINB & (1<<4))){
+; 0000 009D     if(BV(lastPortBValue,4) != BV(PINB,4)){
 	MOV  R30,R4
-	ANDI R30,LOW(0x10)
-	RCALL SUBOPT_0xC
-	ANDI R30,LOW(0x10)
+	RCALL SUBOPT_0x6
+	RCALL SUBOPT_0x7
+	RCALL SUBOPT_0x6
 	CP   R30,R26
-	BREQ _0x3E
-; 0000 0097         if(!PINB.4){
-	SBIC 0x16,4
-	RJMP _0x3F
-; 0000 0098             if(PINB.3)
-	SBIS 0x16,3
-	RJMP _0x40
-; 0000 0099                 increasePwm();
-	RCALL _increasePwm_G000
-; 0000 009A             else
-	RJMP _0x41
-_0x40:
-; 0000 009B                 decreasePwm();
+	BREQ _0x42
+; 0000 009E         if(!BV(PINB, 4)){
+	IN   R30,0x16
+	RCALL SUBOPT_0x6
+	BRNE _0x43
+; 0000 009F             if(BV(PINB, 3))
+	RCALL SUBOPT_0x8
+	BREQ _0x44
+; 0000 00A0                 decreasePwm();//1
 	RCALL _decreasePwm_G000
-; 0000 009C         }else{
-_0x41:
-	RJMP _0x42
-_0x3F:
-; 0000 009D             if(!PINB.3)
-	SBIC 0x16,3
-	RJMP _0x43
-; 0000 009E                 increasePwm();
-	RCALL _increasePwm_G000
-; 0000 009F             else
-	RJMP _0x44
-_0x43:
-; 0000 00A0                 decreasePwm();
-	RCALL _decreasePwm_G000
-; 0000 00A1         }
-_0x44:
-_0x42:
-; 0000 00A2     }else if((lastPortBValue & (1<<3)) != (PINB & (1<<3))){
+; 0000 00A1             else
 	RJMP _0x45
-_0x3E:
-	MOV  R30,R4
-	ANDI R30,LOW(0x8)
-	RCALL SUBOPT_0xC
-	ANDI R30,LOW(0x8)
-	CP   R30,R26
-	BREQ _0x46
-; 0000 00A3         if(!PINB.3){
-	SBIC 0x16,3
-	RJMP _0x47
-; 0000 00A4             if(!PINB.4)
-	SBIC 0x16,4
-	RJMP _0x48
+_0x44:
+; 0000 00A2                 increasePwm();//2
+	RCALL _increasePwm_G000
+; 0000 00A3         }else{
+_0x45:
+	RJMP _0x46
+_0x43:
+; 0000 00A4             if(BV(PINB, 3))
+	RCALL SUBOPT_0x8
+	BREQ _0x47
 ; 0000 00A5                 increasePwm();
 	RCALL _increasePwm_G000
 ; 0000 00A6             else
-	RJMP _0x49
-_0x48:
+	RJMP _0x48
+_0x47:
 ; 0000 00A7                 decreasePwm();
 	RCALL _decreasePwm_G000
-; 0000 00A8         }else{
-_0x49:
-	RJMP _0x4A
-_0x47:
-; 0000 00A9             if(PINB.4)
-	SBIS 0x16,4
-	RJMP _0x4B
-; 0000 00AA                 increasePwm();
-	RCALL _increasePwm_G000
-; 0000 00AB             else
-	RJMP _0x4C
-_0x4B:
-; 0000 00AC                 decreasePwm();
-	RCALL _decreasePwm_G000
-; 0000 00AD         }
-_0x4C:
-_0x4A:
-; 0000 00AE     }else if(((lastPortBValue & (1<<6)) != (PINB & (1<<6))) && !PINB.6){
-	RJMP _0x4D
+; 0000 00A8         }
+_0x48:
 _0x46:
+; 0000 00A9     }else if(BV(lastPortBValue,3) != BV(PINB,3)){
+	RJMP _0x49
+_0x42:
 	MOV  R30,R4
-	ANDI R30,LOW(0x40)
-	RCALL SUBOPT_0xC
-	ANDI R30,LOW(0x40)
-	CP   R30,R26
-	BREQ _0x4F
-	SBIS 0x16,6
-	RJMP _0x50
-_0x4F:
-	RJMP _0x4E
-_0x50:
-; 0000 00AF         toggleTarget();
-	RCALL _toggleTarget
-; 0000 00B0     }else if(((lastPortBValue & (1<<1)) != (PINB & (1<<1))) && !PINB.1){
-	RJMP _0x51
-_0x4E:
-	MOV  R30,R4
-	ANDI R30,LOW(0x2)
-	RCALL SUBOPT_0xC
-	ANDI R30,LOW(0x2)
-	CP   R30,R26
-	BREQ _0x53
-	SBIS 0x16,1
-	RJMP _0x54
-_0x53:
-	RJMP _0x52
-_0x54:
-; 0000 00B1         toggleOut1State();
-	RCALL _toggleOut1State
-; 0000 00B2     }else if(((lastPortBValue & 1) != (PINB & 1)) && !PINB.0){
-	RJMP _0x55
-_0x52:
-	MOV  R30,R4
+	RCALL SUBOPT_0x3
+	RCALL __ASRW3
 	ANDI R30,LOW(0x1)
-	RCALL SUBOPT_0xC
+	RCALL SUBOPT_0x7
+	RCALL SUBOPT_0x3
+	RCALL __ASRW3
 	ANDI R30,LOW(0x1)
 	CP   R30,R26
-	BREQ _0x57
-	SBIS 0x16,0
-	RJMP _0x58
-_0x57:
-	RJMP _0x56
-_0x58:
-; 0000 00B3         toggleOut2State();
-	RCALL _toggleOut2State
-; 0000 00B4     }
-; 0000 00B5     lastPortBValue = PORTB;
-_0x56:
-_0x55:
-_0x51:
+	BRNE _0x4B
+; 0000 00AA 
+; 0000 00AB     }else if((BV(lastPortBValue, 6) != BV(PINB,6)) && BV(PINB, 6)){
+	MOV  R26,R4
+	LDI  R27,0
+	LDI  R30,LOW(6)
+	RCALL __ASRW12
+	ANDI R30,LOW(0x1)
+	RCALL SUBOPT_0x7
+	RCALL SUBOPT_0x9
+	CP   R30,R26
+	BREQ _0x4D
+	IN   R30,0x16
+	RCALL SUBOPT_0x9
+	BRNE _0x4E
 _0x4D:
-_0x45:
-	IN   R4,24
-; 0000 00B6 }
-_0xA7:
+	RJMP _0x4C
+_0x4E:
+; 0000 00AC         toggleTarget();
+	RCALL _toggleTarget
+; 0000 00AD     }else if(((lastPortBValue & (1<<1)) != (PINB & (1<<1))) && !PINB.1){
+	RJMP _0x4F
+_0x4C:
+	MOV  R30,R4
+	ANDI R30,LOW(0x2)
+	RCALL SUBOPT_0x7
+	ANDI R30,LOW(0x2)
+	CP   R30,R26
+	BREQ _0x51
+	SBIS 0x16,1
+	RJMP _0x52
+_0x51:
+	RJMP _0x50
+_0x52:
+; 0000 00AE         toggleOut1State();
+	RCALL _toggleOut1State
+; 0000 00AF     }else if(((lastPortBValue & 1) != (PINB & 1)) && !PINB.0){
+	RJMP _0x53
+_0x50:
+	MOV  R30,R4
+	ANDI R30,LOW(0x1)
+	RCALL SUBOPT_0x7
+	ANDI R30,LOW(0x1)
+	CP   R30,R26
+	BREQ _0x55
+	SBIS 0x16,0
+	RJMP _0x56
+_0x55:
+	RJMP _0x54
+_0x56:
+; 0000 00B0         toggleOut2State();
+	RCALL _toggleOut2State
+; 0000 00B1     }
+; 0000 00B2     lastPortBValue = PINB;
+_0x54:
+_0x53:
+_0x4F:
+_0x4B:
+_0x49:
+	IN   R4,22
+; 0000 00B3 }
+_0xAF:
 	LD   R30,Y+
 	OUT  SREG,R30
 	LD   R31,Y+
@@ -2303,17 +2181,24 @@ _0xA7:
 	RETI
 ;
 ;void displayVal(ui8 val){
-; 0000 00B8 void displayVal(ui8 val){
+; 0000 00B5 void displayVal(ui8 val){
 _displayVal:
-; 0000 00B9     ui8 value;
-; 0000 00BA     if(val > 85){
+; 0000 00B6     ui8 value;
+; 0000 00B7     PORTD.4 = 0;
 	ST   -Y,R17
 ;	val -> Y+1
 ;	value -> R17
+	CBI  0x12,4
+; 0000 00B8     PORTD.3 = 0;
+	RCALL SUBOPT_0xA
+; 0000 00B9     PORTD.2 = 0;
+; 0000 00BA     PORTA.0 = 0;
+; 0000 00BB     PORTA.1 = 0;
+; 0000 00BC     if(val > 85){
 	LDD  R26,Y+1
 	CPI  R26,LOW(0x56)
-	BRLO _0x59
-; 0000 00BB         value = (val - 85) / 34;
+	BRLO _0x61
+; 0000 00BD         value = (val - 85) / 34;
 	LDD  R30,Y+1
 	RCALL SUBOPT_0x3
 	SUBI R30,LOW(85)
@@ -2323,212 +2208,203 @@ _displayVal:
 	LDI  R31,HIGH(34)
 	RCALL __DIVW21
 	MOV  R17,R30
-; 0000 00BC         switch(value){
+; 0000 00BE         switch(value){
 	MOV  R30,R17
 	RCALL SUBOPT_0x3
-; 0000 00BD             case(1):{
-	RCALL SUBOPT_0x5
-	BRNE _0x5D
-; 0000 00BE                 PORTD.4 = 1;
+; 0000 00BF             case(1):{
+	CPI  R30,LOW(0x1)
+	LDI  R26,HIGH(0x1)
+	CPC  R31,R26
+	BRNE _0x65
+; 0000 00C0                 PORTD.4 = 1;
 	SBI  0x12,4
-; 0000 00BF                 PORTD.3 = 0;
-	CBI  0x12,3
-; 0000 00C0                 PORTD.2 = 0;
-	CBI  0x12,2
-; 0000 00C1                 PORTA.0 = 0;
-	CBI  0x1B,0
-; 0000 00C2                 PORTA.1 = 0;
-	CBI  0x1B,1
-; 0000 00C3                 break;
-	RJMP _0x5C
-; 0000 00C4             }
-; 0000 00C5             case(2):{
-_0x5D:
+; 0000 00C1                 PORTD.3 = 0;
+	RCALL SUBOPT_0xA
+; 0000 00C2                 PORTD.2 = 0;
+; 0000 00C3                 PORTA.0 = 0;
+; 0000 00C4                 PORTA.1 = 0;
+; 0000 00C5                 break;
+	RJMP _0x64
+; 0000 00C6             }
+; 0000 00C7             case(2):{
+_0x65:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
-	BRNE _0x68
-; 0000 00C6                 PORTD.4 = 1;
-	RCALL SUBOPT_0xD
-; 0000 00C7                 PORTD.3 = 1;
-; 0000 00C8                 PORTD.2 = 0;
+	BRNE _0x70
+; 0000 00C8                 PORTD.4 = 1;
+	RCALL SUBOPT_0xB
+; 0000 00C9                 PORTD.3 = 1;
+; 0000 00CA                 PORTD.2 = 0;
 	CBI  0x12,2
-; 0000 00C9                 PORTA.0 = 0;
+; 0000 00CB                 PORTA.0 = 0;
 	CBI  0x1B,0
-; 0000 00CA                 PORTA.1 = 0;
+; 0000 00CC                 PORTA.1 = 0;
 	CBI  0x1B,1
-; 0000 00CB                 break;
-	RJMP _0x5C
-; 0000 00CC             }
-; 0000 00CD             case(3):{
-_0x68:
+; 0000 00CD                 break;
+	RJMP _0x64
+; 0000 00CE             }
+; 0000 00CF             case(3):{
+_0x70:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
-	BRNE _0x73
-; 0000 00CE                 PORTD.4 = 1;
-	RCALL SUBOPT_0xD
-; 0000 00CF                 PORTD.3 = 1;
-; 0000 00D0                 PORTD.2 = 1;
+	BRNE _0x7B
+; 0000 00D0                 PORTD.4 = 1;
+	RCALL SUBOPT_0xB
+; 0000 00D1                 PORTD.3 = 1;
+; 0000 00D2                 PORTD.2 = 1;
 	SBI  0x12,2
-; 0000 00D1                 PORTA.0 = 0;
+; 0000 00D3                 PORTA.0 = 0;
 	CBI  0x1B,0
-; 0000 00D2                 PORTA.1 = 0;
+; 0000 00D4                 PORTA.1 = 0;
 	CBI  0x1B,1
-; 0000 00D3                 break;
-	RJMP _0x5C
-; 0000 00D4             }
-; 0000 00D5             case(4):{
-_0x73:
-	RCALL SUBOPT_0x6
-	BRNE _0x7E
-; 0000 00D6                 PORTD.4 = 1;
-	RCALL SUBOPT_0xD
-; 0000 00D7                 PORTD.3 = 1;
-; 0000 00D8                 PORTD.2 = 1;
+; 0000 00D5                 break;
+	RJMP _0x64
+; 0000 00D6             }
+; 0000 00D7             case(4):{
+_0x7B:
+	CPI  R30,LOW(0x4)
+	LDI  R26,HIGH(0x4)
+	CPC  R31,R26
+	BRNE _0x86
+; 0000 00D8                 PORTD.4 = 1;
+	RCALL SUBOPT_0xB
+; 0000 00D9                 PORTD.3 = 1;
+; 0000 00DA                 PORTD.2 = 1;
 	SBI  0x12,2
-; 0000 00D9                 PORTA.0 = 1;
+; 0000 00DB                 PORTA.0 = 1;
 	SBI  0x1B,0
-; 0000 00DA                 PORTA.1 = 0;
+; 0000 00DC                 PORTA.1 = 0;
 	CBI  0x1B,1
-; 0000 00DB                 break;
-	RJMP _0x5C
-; 0000 00DC             }
-; 0000 00DD             case(5):{
-_0x7E:
+; 0000 00DD                 break;
+	RJMP _0x64
+; 0000 00DE             }
+; 0000 00DF             case(5):{
+_0x86:
 	CPI  R30,LOW(0x5)
 	LDI  R26,HIGH(0x5)
 	CPC  R31,R26
-	BRNE _0x5C
-; 0000 00DE                 PORTD.4 = 1;
-	RCALL SUBOPT_0xD
-; 0000 00DF                 PORTD.3 = 1;
-; 0000 00E0                 PORTD.2 = 1;
+	BRNE _0x64
+; 0000 00E0                 PORTD.4 = 1;
+	RCALL SUBOPT_0xB
+; 0000 00E1                 PORTD.3 = 1;
+; 0000 00E2                 PORTD.2 = 1;
 	SBI  0x12,2
-; 0000 00E1                 PORTA.0 = 1;
+; 0000 00E3                 PORTA.0 = 1;
 	SBI  0x1B,0
-; 0000 00E2                 PORTA.1 = 1;
+; 0000 00E4                 PORTA.1 = 1;
 	SBI  0x1B,1
-; 0000 00E3                 break;
-; 0000 00E4             }
-; 0000 00E5         }
-_0x5C:
-; 0000 00E6     }
-; 0000 00E7     PORTD.6 = !!val;//first led
-_0x59:
+; 0000 00E5                 break;
+; 0000 00E6             }
+; 0000 00E7         }
+_0x64:
+; 0000 00E8     }
+; 0000 00E9     PORTD.6 = !!val;//first led
+_0x61:
 	LDD  R30,Y+1
 	CPI  R30,0
-	BRNE _0x94
+	BRNE _0x9C
 	CBI  0x12,6
-	RJMP _0x95
-_0x94:
+	RJMP _0x9D
+_0x9C:
 	SBI  0x12,6
-_0x95:
-; 0000 00E8 }
+_0x9D:
+; 0000 00EA }
 	LDD  R17,Y+0
-_0x2000001:
 	ADIW R28,2
 	RET
 ;
 ;void main(void){
-; 0000 00EA void main(void){
+; 0000 00EC void main(void){
 _main:
-; 0000 00EB ui8 toggler = 0;
-; 0000 00EC     // Crystal Oscillator division factor: 1
-; 0000 00ED #pragma optsize-
-; 0000 00EE CLKPR=0x80;
+; 0000 00ED ui8 toggler = 0;
+; 0000 00EE     // Crystal Oscillator division factor: 1
+; 0000 00EF #pragma optsize-
+; 0000 00F0 CLKPR=0x80;
 ;	toggler -> R17
 	LDI  R17,0
 	LDI  R30,LOW(128)
 	OUT  0x26,R30
-; 0000 00EF CLKPR=0x00;
+; 0000 00F1 CLKPR=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x26,R30
-; 0000 00F0 #ifdef _OPTIMIZE_SIZE_
-; 0000 00F1 #pragma optsize+
-; 0000 00F2 #endif
-; 0000 00F3 
-; 0000 00F4     configure();
-	RCALL _configure_G000
+; 0000 00F2 #ifdef _OPTIMIZE_SIZE_
+; 0000 00F3 #pragma optsize+
+; 0000 00F4 #endif
 ; 0000 00F5 
-; 0000 00F6     restorePwmValues();
-	RCALL _restorePwmValues
+; 0000 00F6     configure();
+	RCALL _configure_G000
 ; 0000 00F7 
-; 0000 00F8     usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
-	LDI  R30,LOW(64)
-	ST   -Y,R30
-	LDI  R30,LOW(0)
-	ST   -Y,R30
-	LDI  R30,LOW(_on_twi_receive_G000)
-	LDI  R31,HIGH(_on_twi_receive_G000)
-	ST   -Y,R31
-	ST   -Y,R30
-	LDI  R30,LOW(0)
-	LDI  R31,HIGH(0)
-	ST   -Y,R31
-	ST   -Y,R30
-	RCALL _usi_twi_slave
-; 0000 00F9     #asm("sei")
+; 0000 00F8     restorePwmValues();
+	RCALL _restorePwmValues
+; 0000 00F9 
+; 0000 00FA    // OCR0A = 255;
+; 0000 00FB   //  OCR0B = 255;
+; 0000 00FC 
+; 0000 00FD    // usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
+; 0000 00FE     #asm("sei")
 	sei
-; 0000 00FA 
-; 0000 00FB     while (1){
-_0x96:
-; 0000 00FC         if(!settingTarget){
-	RCALL SUBOPT_0xB
-	BRNE _0x99
-; 0000 00FD             displayVal(OCR0A);
+; 0000 00FF 
+; 0000 0100     while (1){
+_0x9E:
+; 0000 0101 
+; 0000 0102         PORTD.0 = !!(outputStates & 1);
+	SBRC R5,0
+	RJMP _0xA1
+	CBI  0x12,0
+	RJMP _0xA2
+_0xA1:
+	SBI  0x12,0
+_0xA2:
+; 0000 0103         PORTD.1 = !!(outputStates & 2);
+	SBRC R5,1
+	RJMP _0xA3
+	CBI  0x12,1
+	RJMP _0xA4
+_0xA3:
+	SBI  0x12,1
+_0xA4:
+; 0000 0104         if(!settingTarget){
+	RCALL SUBOPT_0x5
+	BRNE _0xA5
+; 0000 0105             displayVal(OCR0A);
 	IN   R30,0x36
 	ST   -Y,R30
 	RCALL _displayVal
-; 0000 00FE         }else{
-	RJMP _0x9A
-_0x99:
-; 0000 00FF             if(toggler)
-	CPI  R17,0
-	BREQ _0x9B
-; 0000 0100                 displayVal(OCR0B);
-	IN   R30,0x3C
+; 0000 0106         }else{
 	RJMP _0xA6
-; 0000 0101             else
-_0x9B:
-; 0000 0102                 displayVal(0);
+_0xA5:
+; 0000 0107             if(toggler)
+	CPI  R17,0
+	BREQ _0xA7
+; 0000 0108                 displayVal(OCR0B);
+	IN   R30,0x3C
+	RJMP _0xAE
+; 0000 0109             else
+_0xA7:
+; 0000 010A                 displayVal(0);
 	LDI  R30,LOW(0)
-_0xA6:
+_0xAE:
 	ST   -Y,R30
 	RCALL _displayVal
-; 0000 0103             toggler = !toggler;
+; 0000 010B             toggler = !toggler;
 	MOV  R30,R17
 	RCALL __LNEGB1
 	MOV  R17,R30
-; 0000 0104             delay_ms(LedDelay);
+; 0000 010C             delay_ms(LedDelay);
 	LDI  R30,LOW(50)
 	LDI  R31,HIGH(50)
 	ST   -Y,R31
 	ST   -Y,R30
 	RCALL _delay_ms
-; 0000 0105         }
-_0x9A:
-; 0000 0106         PORTD.0 = !!(outputStates & 1);
-	SBRC R5,0
-	RJMP _0x9D
-	CBI  0x12,0
+; 0000 010D         }
+_0xA6:
+; 0000 010E     };
 	RJMP _0x9E
-_0x9D:
-	SBI  0x12,0
-_0x9E:
-; 0000 0107         PORTD.1 = !!(outputStates & 2);
-	SBRC R5,1
-	RJMP _0x9F
-	CBI  0x12,1
-	RJMP _0xA0
-_0x9F:
-	SBI  0x12,1
-_0xA0:
-; 0000 0108     };
-	RJMP _0x96
-; 0000 0109 }
-_0xA1:
-	RJMP _0xA1
+; 0000 010F }
+_0xA9:
+	RJMP _0xA9
 
 	.DSEG
 _idle_callback_G000:
@@ -2581,12 +2457,12 @@ SUBOPT_0x1:
 	STS  _of_state_G000,R30
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:4 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:2 WORDS
 SUBOPT_0x2:
 	STS  _ss_state_G000,R30
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:10 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 16 TIMES, CODE SIZE REDUCTION:28 WORDS
 SUBOPT_0x3:
 	LDI  R31,0
 	RET
@@ -2597,66 +2473,53 @@ SUBOPT_0x4:
 	OUT  0xF,R30
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0x5:
-	CPI  R30,LOW(0x1)
-	LDI  R26,HIGH(0x1)
-	CPC  R31,R26
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0x6:
-	CPI  R30,LOW(0x4)
-	LDI  R26,HIGH(0x4)
-	CPC  R31,R26
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:3 WORDS
-SUBOPT_0x7:
-	LDI  R30,LOW(0)
-	STS  _output_buffer_length_G000,R30
-	STS  _output_buffer_current_G000,R30
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x8:
-	LDI  R30,LOW(_idle_callback_G000)
-	LDI  R31,HIGH(_idle_callback_G000)
-	MOV  R26,R30
-	RCALL __GETW1P
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0x9:
-	LDD  R26,Y+2
-	LD   R30,X
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0xA:
-	LDD  R30,Y+2
-	LDD  R26,Z+1
-	LDI  R30,LOW(1)
-	AND  R30,R26
-	ST   -Y,R30
-	RET
-
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
-SUBOPT_0xB:
+SUBOPT_0x5:
 	LDI  R26,LOW(_settingTarget)
 	LDI  R27,HIGH(_settingTarget)
 	RCALL __EEPROMRDB
 	CPI  R30,0
 	RET
 
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:2 WORDS
+SUBOPT_0x6:
+	RCALL SUBOPT_0x3
+	RCALL __ASRW4
+	ANDI R30,LOW(0x1)
+	RET
+
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:2 WORDS
-SUBOPT_0xC:
+SUBOPT_0x7:
 	MOV  R26,R30
 	IN   R30,0x16
 	RET
 
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x8:
+	IN   R30,0x16
+	RCALL SUBOPT_0x3
+	RCALL __ASRW3
+	ANDI R30,LOW(0x1)
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x9:
+	RCALL SUBOPT_0x3
+	RCALL __ASRW2
+	RCALL __ASRW4
+	ANDI R30,LOW(0x1)
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0xA:
+	CBI  0x12,3
+	CBI  0x12,2
+	CBI  0x1B,0
+	CBI  0x1B,1
+	RET
+
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:1 WORDS
-SUBOPT_0xD:
+SUBOPT_0xB:
 	SBI  0x12,4
 	SBI  0x12,3
 	RET
@@ -2682,11 +2545,30 @@ __ANEGW1:
 	SBCI R31,0
 	RET
 
-__ASRW8:
-	MOV  R30,R31
-	CLR  R31
-	SBRC R30,7
-	SER  R31
+__ASRW12:
+	TST  R30
+	MOV  R0,R30
+	MOVW R30,R26
+	BREQ __ASRW12R
+__ASRW12L:
+	ASR  R31
+	ROR  R30
+	DEC  R0
+	BRNE __ASRW12L
+__ASRW12R:
+	RET
+
+__ASRW4:
+	ASR  R31
+	ROR  R30
+__ASRW3:
+	ASR  R31
+	ROR  R30
+__ASRW2:
+	ASR  R31
+	ROR  R30
+	ASR  R31
+	ROR  R30
 	RET
 
 __LNEGB1:
@@ -2747,11 +2629,11 @@ __CHKSW1:
 __CHKSW2:
 	RET
 
-__GETW1P:
-	LD   R30,X+
-	LD   R31,X
-	DEC  R26
-	RET
+__EEPROMRDW:
+	ADIW R26,1
+	RCALL __EEPROMRDB
+	MOV  R31,R30
+	SBIW R26,1
 
 __EEPROMRDB:
 	SBIC EECR,EEWE
