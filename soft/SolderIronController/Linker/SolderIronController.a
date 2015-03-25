@@ -1423,22 +1423,22 @@
 ;PCODE: $0000033D VOL: 0
 ;PCODE: $0000033E VOL: 0
 ; 0000 00B6     ui8 value;
-; 0000 00B7     PORTD.4 = 0;
+; 0000 00B7     PORTD.0 = 0;
 ;PCODE: $0000033F VOL: 0
 ;	val -> Y+1
 ;	value -> R17
 ;PCODE: $00000340 VOL: 0
 ;PCODE: $00000341 VOL: 0
-; 0000 00B8     PORTD.3 = 0;
+; 0000 00B8     PORTD.1 = 0;
 ;PCODE: $00000342 VOL: 0
 ;PCODE: $00000343 VOL: 0
-; 0000 00B9     PORTD.2 = 0;
+; 0000 00B9     PORTA.1 = 0;
 ;PCODE: $00000344 VOL: 0
 ;PCODE: $00000345 VOL: 0
 ; 0000 00BA     PORTA.0 = 0;
 ;PCODE: $00000346 VOL: 0
 ;PCODE: $00000347 VOL: 0
-; 0000 00BB     PORTA.1 = 0;
+; 0000 00BB     PORTD.2 = 0;
 ;PCODE: $00000348 VOL: 0
 ;PCODE: $00000349 VOL: 0
 ; 0000 00BC     if(val > 85){
@@ -1459,19 +1459,19 @@
 ; 0000 00BF             case(1):{
 ;PCODE: $00000356 VOL: 0
 ;PCODE: $00000357 VOL: 0
-; 0000 00C0                 PORTD.4 = 1;
+; 0000 00C0                 PORTD.0 = 1;
 ;PCODE: $00000358 VOL: 0
 ;PCODE: $00000359 VOL: 0
-; 0000 00C1                 PORTD.3 = 0;
+; 0000 00C1                 PORTD.1 = 0;
 ;PCODE: $0000035A VOL: 0
 ;PCODE: $0000035B VOL: 0
-; 0000 00C2                 PORTD.2 = 0;
+; 0000 00C2                 PORTA.1 = 0;
 ;PCODE: $0000035C VOL: 0
 ;PCODE: $0000035D VOL: 0
 ; 0000 00C3                 PORTA.0 = 0;
 ;PCODE: $0000035E VOL: 0
 ;PCODE: $0000035F VOL: 0
-; 0000 00C4                 PORTA.1 = 0;
+; 0000 00C4                 PORTD.2 = 0;
 ;PCODE: $00000360 VOL: 0
 ;PCODE: $00000361 VOL: 0
 ; 0000 00C5                 break;
@@ -1481,19 +1481,19 @@
 ;PCODE: $00000363 VOL: 0
 ;PCODE: $00000364 VOL: 0
 ;PCODE: $00000365 VOL: 0
-; 0000 00C8                 PORTD.4 = 1;
+; 0000 00C8                 PORTD.0 = 1;
 ;PCODE: $00000366 VOL: 0
 ;PCODE: $00000367 VOL: 0
-; 0000 00C9                 PORTD.3 = 1;
+; 0000 00C9                 PORTD.1 = 1;
 ;PCODE: $00000368 VOL: 0
 ;PCODE: $00000369 VOL: 0
-; 0000 00CA                 PORTD.2 = 0;
+; 0000 00CA                 PORTA.1 = 0;
 ;PCODE: $0000036A VOL: 0
 ;PCODE: $0000036B VOL: 0
 ; 0000 00CB                 PORTA.0 = 0;
 ;PCODE: $0000036C VOL: 0
 ;PCODE: $0000036D VOL: 0
-; 0000 00CC                 PORTA.1 = 0;
+; 0000 00CC                 PORTD.2 = 0;
 ;PCODE: $0000036E VOL: 0
 ;PCODE: $0000036F VOL: 0
 ; 0000 00CD                 break;
@@ -1503,19 +1503,19 @@
 ;PCODE: $00000371 VOL: 0
 ;PCODE: $00000372 VOL: 0
 ;PCODE: $00000373 VOL: 0
-; 0000 00D0                 PORTD.4 = 1;
+; 0000 00D0                 PORTD.0 = 1;
 ;PCODE: $00000374 VOL: 0
 ;PCODE: $00000375 VOL: 0
-; 0000 00D1                 PORTD.3 = 1;
+; 0000 00D1                 PORTD.1 = 1;
 ;PCODE: $00000376 VOL: 0
 ;PCODE: $00000377 VOL: 0
-; 0000 00D2                 PORTD.2 = 1;
+; 0000 00D2                 PORTA.1 = 1;
 ;PCODE: $00000378 VOL: 0
 ;PCODE: $00000379 VOL: 0
 ; 0000 00D3                 PORTA.0 = 0;
 ;PCODE: $0000037A VOL: 0
 ;PCODE: $0000037B VOL: 0
-; 0000 00D4                 PORTA.1 = 0;
+; 0000 00D4                 PORTD.2 = 0;
 ;PCODE: $0000037C VOL: 0
 ;PCODE: $0000037D VOL: 0
 ; 0000 00D5                 break;
@@ -1525,19 +1525,19 @@
 ;PCODE: $0000037F VOL: 0
 ;PCODE: $00000380 VOL: 0
 ;PCODE: $00000381 VOL: 0
-; 0000 00D8                 PORTD.4 = 1;
+; 0000 00D8                 PORTD.0 = 1;
 ;PCODE: $00000382 VOL: 0
 ;PCODE: $00000383 VOL: 0
-; 0000 00D9                 PORTD.3 = 1;
+; 0000 00D9                 PORTD.1 = 1;
 ;PCODE: $00000384 VOL: 0
 ;PCODE: $00000385 VOL: 0
-; 0000 00DA                 PORTD.2 = 1;
+; 0000 00DA                 PORTA.1 = 1;
 ;PCODE: $00000386 VOL: 0
 ;PCODE: $00000387 VOL: 0
 ; 0000 00DB                 PORTA.0 = 1;
 ;PCODE: $00000388 VOL: 0
 ;PCODE: $00000389 VOL: 0
-; 0000 00DC                 PORTA.1 = 0;
+; 0000 00DC                 PORTD.2 = 0;
 ;PCODE: $0000038A VOL: 0
 ;PCODE: $0000038B VOL: 0
 ; 0000 00DD                 break;
@@ -1547,19 +1547,19 @@
 ;PCODE: $0000038D VOL: 0
 ;PCODE: $0000038E VOL: 0
 ;PCODE: $0000038F VOL: 0
-; 0000 00E0                 PORTD.4 = 1;
+; 0000 00E0                 PORTD.0 = 1;
 ;PCODE: $00000390 VOL: 0
 ;PCODE: $00000391 VOL: 0
-; 0000 00E1                 PORTD.3 = 1;
+; 0000 00E1                 PORTD.1 = 1;
 ;PCODE: $00000392 VOL: 0
 ;PCODE: $00000393 VOL: 0
-; 0000 00E2                 PORTD.2 = 1;
+; 0000 00E2                 PORTA.1 = 1;
 ;PCODE: $00000394 VOL: 0
 ;PCODE: $00000395 VOL: 0
 ; 0000 00E3                 PORTA.0 = 1;
 ;PCODE: $00000396 VOL: 0
 ;PCODE: $00000397 VOL: 0
-; 0000 00E4                 PORTA.1 = 1;
+; 0000 00E4                 PORTD.2 = 1;
 ;PCODE: $00000398 VOL: 0
 ;PCODE: $00000399 VOL: 0
 ; 0000 00E5                 break;
@@ -1624,7 +1624,7 @@
 ; 0000 0100     while (1){
 ;PCODE: $000003B7 VOL: 0
 ; 0000 0101 
-; 0000 0102         PORTD.0 = !!(outputStates & 1);
+; 0000 0102         PORTD.3 = !!(outputStates & 1);//0
 ;PCODE: $000003B8 VOL: 0
 ;PCODE: $000003B9 VOL: 0
 ;PCODE: $000003BA VOL: 0
@@ -1635,7 +1635,7 @@
 ;PCODE: $000003BF VOL: 0
 ;PCODE: $000003C0 VOL: 0
 ;PCODE: $000003C1 VOL: 0
-; 0000 0103         PORTD.1 = !!(outputStates & 2);
+; 0000 0103         PORTD.4 = !!(outputStates & 2);//1
 ;PCODE: $000003C2 VOL: 0
 ;PCODE: $000003C3 VOL: 0
 ;PCODE: $000003C4 VOL: 0

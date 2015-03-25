@@ -70,8 +70,8 @@ static void on_twi_receive(uint8_t input_buffer_length, const uint8_t *input_buf
 }
 
 void restorePwmValues(void){
-    OCR0A = (char) pwmValues >> 8;
-    OCR0B = (char) pwmValues;
+    OCR0A = (ui8) (pwmValues >> 8);
+    OCR0B = (ui8) pwmValues;
 }                   
 
 void savePwmValues(void){
@@ -189,40 +189,40 @@ void displayVal(ui8 val){
         value = (val - 85) / 34; 
         switch(value){
             case(1):{
-                PORTD.4 = 1;
-                PORTD.3 = 0;
+                PORTD.0 = 1;
+                PORTD.1 = 0;
                 PORTD.2 = 0;
                 PORTA.0 = 0;
                 PORTA.1 = 0;
                 break;
             }
             case(2):{
-                PORTD.4 = 1;
-                PORTD.3 = 1;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
                 PORTD.2 = 0;
                 PORTA.0 = 0;
                 PORTA.1 = 0;
                 break;
             }
             case(3):{
-                PORTD.4 = 1;
-                PORTD.3 = 1;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
                 PORTD.2 = 1;
                 PORTA.0 = 0;
                 PORTA.1 = 0;
                 break;
             }
             case(4):{       
-                PORTD.4 = 1;
-                PORTD.3 = 1;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
                 PORTD.2 = 1;
                 PORTA.0 = 1;
                 PORTA.1 = 0;
                 break;
             }
             case(5):{       
-                PORTD.4 = 1;
-                PORTD.3 = 1;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
                 PORTD.2 = 1;
                 PORTA.0 = 1;
                 PORTA.1 = 1;
@@ -255,8 +255,8 @@ CLKPR=0x00;
 
     while (1){
         
-        PORTD.0 = !!(outputStates & 1);
-        PORTD.1 = !!(outputStates & 2);
+        PORTD.3 = !!(outputStates & 1);//0
+        PORTD.4 = !!(outputStates & 2);//1
         if(!settingTarget){
             displayVal(OCR0A);    
         }else{

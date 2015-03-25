@@ -180,52 +180,52 @@ interrupt [PC_INT] void pin_change_isr0(void){
  
 void displayVal(ui8 val){
     ui8 value;
-    PORTD.4 = 0;
-    PORTD.3 = 0;
-    PORTD.2 = 0;
-    PORTA.0 = 0;
+    PORTD.0 = 0;
+    PORTD.1 = 0;
     PORTA.1 = 0;
+    PORTA.0 = 0;
+    PORTD.2 = 0;
     if(val > 85){
         value = (val - 85) / 34; 
         switch(value){
             case(1):{
-                PORTD.4 = 1;
-                PORTD.3 = 0;
-                PORTD.2 = 0;
-                PORTA.0 = 0;
+                PORTD.0 = 1;
+                PORTD.1 = 0;
                 PORTA.1 = 0;
+                PORTA.0 = 0;
+                PORTD.2 = 0;
                 break;
             }
             case(2):{
-                PORTD.4 = 1;
-                PORTD.3 = 1;
-                PORTD.2 = 0;
-                PORTA.0 = 0;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
                 PORTA.1 = 0;
+                PORTA.0 = 0;
+                PORTD.2 = 0;
                 break;
             }
             case(3):{
-                PORTD.4 = 1;
-                PORTD.3 = 1;
-                PORTD.2 = 1;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
+                PORTA.1 = 1;
                 PORTA.0 = 0;
-                PORTA.1 = 0;
+                PORTD.2 = 0;
                 break;
             }
             case(4):{       
-                PORTD.4 = 1;
-                PORTD.3 = 1;
-                PORTD.2 = 1;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
+                PORTA.1 = 1;
                 PORTA.0 = 1;
-                PORTA.1 = 0;
+                PORTD.2 = 0;
                 break;
             }
             case(5):{       
-                PORTD.4 = 1;
-                PORTD.3 = 1;
-                PORTD.2 = 1;
-                PORTA.0 = 1;
+                PORTD.0 = 1;
+                PORTD.1 = 1;
                 PORTA.1 = 1;
+                PORTA.0 = 1;
+                PORTD.2 = 1;
                 break;
             }
         }    
@@ -255,8 +255,8 @@ CLKPR=0x00;
 
     while (1){
         
-        PORTD.0 = !!(outputStates & 1);
-        PORTD.1 = !!(outputStates & 2);
+        PORTD.3 = !!(outputStates & 1);//0
+        PORTD.4 = !!(outputStates & 2);//1
         if(!settingTarget){
             displayVal(OCR0A);    
         }else{

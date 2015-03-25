@@ -2184,16 +2184,16 @@ _0xAF:
 ; 0000 00B5 void displayVal(ui8 val){
 _displayVal:
 ; 0000 00B6     ui8 value;
-; 0000 00B7     PORTD.4 = 0;
+; 0000 00B7     PORTD.0 = 0;
 	ST   -Y,R17
 ;	val -> Y+1
 ;	value -> R17
-	CBI  0x12,4
-; 0000 00B8     PORTD.3 = 0;
+	CBI  0x12,0
+; 0000 00B8     PORTD.1 = 0;
 	RCALL SUBOPT_0xA
-; 0000 00B9     PORTD.2 = 0;
+; 0000 00B9     PORTA.1 = 0;
 ; 0000 00BA     PORTA.0 = 0;
-; 0000 00BB     PORTA.1 = 0;
+; 0000 00BB     PORTD.2 = 0;
 ; 0000 00BC     if(val > 85){
 	LDD  R26,Y+1
 	CPI  R26,LOW(0x56)
@@ -2216,13 +2216,13 @@ _displayVal:
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
 	BRNE _0x65
-; 0000 00C0                 PORTD.4 = 1;
-	SBI  0x12,4
-; 0000 00C1                 PORTD.3 = 0;
+; 0000 00C0                 PORTD.0 = 1;
+	SBI  0x12,0
+; 0000 00C1                 PORTD.1 = 0;
 	RCALL SUBOPT_0xA
-; 0000 00C2                 PORTD.2 = 0;
+; 0000 00C2                 PORTA.1 = 0;
 ; 0000 00C3                 PORTA.0 = 0;
-; 0000 00C4                 PORTA.1 = 0;
+; 0000 00C4                 PORTD.2 = 0;
 ; 0000 00C5                 break;
 	RJMP _0x64
 ; 0000 00C6             }
@@ -2232,15 +2232,15 @@ _0x65:
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
 	BRNE _0x70
-; 0000 00C8                 PORTD.4 = 1;
+; 0000 00C8                 PORTD.0 = 1;
 	RCALL SUBOPT_0xB
-; 0000 00C9                 PORTD.3 = 1;
-; 0000 00CA                 PORTD.2 = 0;
-	CBI  0x12,2
+; 0000 00C9                 PORTD.1 = 1;
+; 0000 00CA                 PORTA.1 = 0;
+	CBI  0x1B,1
 ; 0000 00CB                 PORTA.0 = 0;
 	CBI  0x1B,0
-; 0000 00CC                 PORTA.1 = 0;
-	CBI  0x1B,1
+; 0000 00CC                 PORTD.2 = 0;
+	CBI  0x12,2
 ; 0000 00CD                 break;
 	RJMP _0x64
 ; 0000 00CE             }
@@ -2250,15 +2250,15 @@ _0x70:
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
 	BRNE _0x7B
-; 0000 00D0                 PORTD.4 = 1;
+; 0000 00D0                 PORTD.0 = 1;
 	RCALL SUBOPT_0xB
-; 0000 00D1                 PORTD.3 = 1;
-; 0000 00D2                 PORTD.2 = 1;
-	SBI  0x12,2
+; 0000 00D1                 PORTD.1 = 1;
+; 0000 00D2                 PORTA.1 = 1;
+	SBI  0x1B,1
 ; 0000 00D3                 PORTA.0 = 0;
 	CBI  0x1B,0
-; 0000 00D4                 PORTA.1 = 0;
-	CBI  0x1B,1
+; 0000 00D4                 PORTD.2 = 0;
+	CBI  0x12,2
 ; 0000 00D5                 break;
 	RJMP _0x64
 ; 0000 00D6             }
@@ -2268,15 +2268,15 @@ _0x7B:
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
 	BRNE _0x86
-; 0000 00D8                 PORTD.4 = 1;
+; 0000 00D8                 PORTD.0 = 1;
 	RCALL SUBOPT_0xB
-; 0000 00D9                 PORTD.3 = 1;
-; 0000 00DA                 PORTD.2 = 1;
-	SBI  0x12,2
+; 0000 00D9                 PORTD.1 = 1;
+; 0000 00DA                 PORTA.1 = 1;
+	SBI  0x1B,1
 ; 0000 00DB                 PORTA.0 = 1;
 	SBI  0x1B,0
-; 0000 00DC                 PORTA.1 = 0;
-	CBI  0x1B,1
+; 0000 00DC                 PORTD.2 = 0;
+	CBI  0x12,2
 ; 0000 00DD                 break;
 	RJMP _0x64
 ; 0000 00DE             }
@@ -2286,15 +2286,15 @@ _0x86:
 	LDI  R26,HIGH(0x5)
 	CPC  R31,R26
 	BRNE _0x64
-; 0000 00E0                 PORTD.4 = 1;
+; 0000 00E0                 PORTD.0 = 1;
 	RCALL SUBOPT_0xB
-; 0000 00E1                 PORTD.3 = 1;
-; 0000 00E2                 PORTD.2 = 1;
-	SBI  0x12,2
+; 0000 00E1                 PORTD.1 = 1;
+; 0000 00E2                 PORTA.1 = 1;
+	SBI  0x1B,1
 ; 0000 00E3                 PORTA.0 = 1;
 	SBI  0x1B,0
-; 0000 00E4                 PORTA.1 = 1;
-	SBI  0x1B,1
+; 0000 00E4                 PORTD.2 = 1;
+	SBI  0x12,2
 ; 0000 00E5                 break;
 ; 0000 00E6             }
 ; 0000 00E7         }
@@ -2349,21 +2349,21 @@ _main:
 ; 0000 0100     while (1){
 _0x9E:
 ; 0000 0101 
-; 0000 0102         PORTD.0 = !!(outputStates & 1);
+; 0000 0102         PORTD.3 = !!(outputStates & 1);//0
 	SBRC R5,0
 	RJMP _0xA1
-	CBI  0x12,0
+	CBI  0x12,3
 	RJMP _0xA2
 _0xA1:
-	SBI  0x12,0
+	SBI  0x12,3
 _0xA2:
-; 0000 0103         PORTD.1 = !!(outputStates & 2);
+; 0000 0103         PORTD.4 = !!(outputStates & 2);//1
 	SBRC R5,1
 	RJMP _0xA3
-	CBI  0x12,1
+	CBI  0x12,4
 	RJMP _0xA4
 _0xA3:
-	SBI  0x12,1
+	SBI  0x12,4
 _0xA4:
 ; 0000 0104         if(!settingTarget){
 	RCALL SUBOPT_0x5
@@ -2512,16 +2512,16 @@ SUBOPT_0x9:
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
 SUBOPT_0xA:
-	CBI  0x12,3
-	CBI  0x12,2
-	CBI  0x1B,0
+	CBI  0x12,1
 	CBI  0x1B,1
+	CBI  0x1B,0
+	CBI  0x12,2
 	RET
 
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:1 WORDS
 SUBOPT_0xB:
-	SBI  0x12,4
-	SBI  0x12,3
+	SBI  0x12,0
+	SBI  0x12,1
 	RET
 
 
