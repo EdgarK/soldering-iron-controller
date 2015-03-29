@@ -180,16 +180,12 @@ interrupt [PC_INT] void pin_change_isr0(void){
  
 void displayVal(ui8 val){
     ui8 value;
-    PORTD.0 = 0;
-    PORTD.1 = 0;
-    PORTA.1 = 0;
-    PORTA.0 = 0;
-    PORTD.2 = 0;
-    if(val > 85){
-        value = (val - 85) / 34; 
+    if(val > 128){
+        value = (val - 128) / 25; 
         switch(value){
             case(1):{
-                PORTD.0 = 1;
+//                PORTD.0 = 1;
+                PORTD.6 = 1;
                 PORTD.1 = 0;
                 PORTA.1 = 0;
                 PORTA.0 = 0;
@@ -197,7 +193,8 @@ void displayVal(ui8 val){
                 break;
             }
             case(2):{
-                PORTD.0 = 1;
+//                PORTD.0 = 1;
+                PORTD.6 = 1;
                 PORTD.1 = 1;
                 PORTA.1 = 0;
                 PORTA.0 = 0;
@@ -205,7 +202,8 @@ void displayVal(ui8 val){
                 break;
             }
             case(3):{
-                PORTD.0 = 1;
+//                PORTD.0 = 1;
+                PORTD.6 = 1;
                 PORTD.1 = 1;
                 PORTA.1 = 1;
                 PORTA.0 = 0;
@@ -213,7 +211,8 @@ void displayVal(ui8 val){
                 break;
             }
             case(4):{       
-                PORTD.0 = 1;
+//                PORTD.0 = 1;
+                PORTD.6 = 1;
                 PORTD.1 = 1;
                 PORTA.1 = 1;
                 PORTA.0 = 1;
@@ -221,7 +220,8 @@ void displayVal(ui8 val){
                 break;
             }
             case(5):{       
-                PORTD.0 = 1;
+//                PORTD.0 = 1;
+                PORTD.6 = 1;
                 PORTD.1 = 1;
                 PORTA.1 = 1;
                 PORTA.0 = 1;
@@ -229,12 +229,20 @@ void displayVal(ui8 val){
                 break;
             }
         }    
+    }else{
+        PORTD.6 = 0;
+        PORTD.0 = 0;
+        PORTD.1 = 0;
+        PORTA.1 = 0;
+        PORTA.0 = 0;
+        PORTD.2 = 0;    
     }
-    PORTD.6 = !!val;//first led
+    
 }
      
 void main(void){
 ui8 toggler = 0;
+ui16 counter = 0;
     // Crystal Oscillator division factor: 1
 #pragma optsize-
 CLKPR=0x80;
@@ -247,25 +255,58 @@ CLKPR=0x00;
 
     restorePwmValues();
     
-   // OCR0A = 255;
-  //  OCR0B = 255;
-    
    // usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
     #asm("sei")
 
-    while (1){
-        
-        PORTD.3 = !!(outputStates & 1);//0
-        PORTD.4 = !!(outputStates & 2);//1
-        if(!settingTarget){
-            displayVal(OCR0A);    
-        }else{
-            if(toggler)
-                displayVal(OCR0B);
+    while (1){       
+    
+        if(!settingTarget){            
+            
+            if(!!(outputStates & 1))
+                PORTD.3 = (counter > 400);    
             else
+                PORTD.3 = (counter < 400);
+                            
+            PORTD.4 = !!(outputStates & 2);
+            
+            
+            if(OCR0A > 133)
+                displayVal(OCR0A);                 
+            else if(counter > 8000)                   
+                displayVal(OCR0A + 120);
+            else 
                 displayVal(0);
-            toggler = !toggler;
-            delay_ms(LedDelay); 
-        }  
+                
+        }else{
+            PORTD.3 = !!(outputStates & 1);                               
+             
+            if(!!(outputStates & 2))
+                PORTD.4 = (counter > 400);
+            else                          
+                PORTD.4 = (counter < 400);
+                
+            if(OCR0B > 133)
+                displayVal(OCR0B);                 
+            else if(counter > 8000)                   
+                displayVal(OCR0B + 120);
+            else 
+                displayVal(0);;
+        }          
+        
+        counter++;
+        if(counter >= 16000) counter = 0; 
+        
+        //PORTD.3 = !!(outputStates & 1);//0
+        //PORTD.4 = !!(outputStates & 2);//1
+        //if(!settingTarget){
+        //    displayVal(OCR0A);    
+        //}else{
+        //    if(toggler)
+        //        displayVal(OCR0B);
+        //    else
+        //        displayVal(0);
+        //    toggler = !toggler;
+        //    delay_ms(LedDelay); 
+        //}  
     };
 }

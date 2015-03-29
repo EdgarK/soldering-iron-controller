@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.30  C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronController.asm Wed Mar 25 23:16:22 2015
+AVRASM ver. 2.1.30  C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronController.asm Sun Mar 29 21:46:34 2015
 
 C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronController.asm(955): warning: Register r3 already defined by the .DEF directive
 C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronController.asm(956): warning: Register r2 already defined by the .DEF directive
@@ -989,13 +989,13 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 000011 cfee      	RJMP 0x00
 000012 cfed      	RJMP 0x00
                  
-                 _0xB0:
+                 _0xC5:
 000013 0000      	.DB  0x0,0x0
                  
                  __GLOBAL_INI_TBL:
 000014 0002      	.DW  0x02
 000015 0004      	.DW  0x04
-000016 0026      	.DW  _0xB0*2
+000016 0026      	.DW  _0xC5*2
                  
                  _0xFFFFFFFF:
 000017 0000      	.DW  0
@@ -1066,7 +1066,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ;DATA STACK POINTER INITIALIZATION
 000044 e8c0      	LDI  R28,LOW(0x80)
                  
-000045 c204      	RJMP _main
+000045 c200      	RJMP _main
                  
                  	.ESEG
                  	.ORG 0
@@ -1288,7 +1288,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ;// USI start condition interrupt service routine
                  ;interrupt [USI_STRT] void usi_start_isr(void){
                  _usi_start_isr:
-000067 d20b      	RCALL SUBOPT_0x0
+000067 d23f      	RCALL SUBOPT_0x0
                  ;    set_sda_to_input();
 000068 dfdd      	RCALL _set_sda_to_input_G000
                  ;    // wait for SCL to go low to ensure the start condition has completed (the
@@ -1318,16 +1318,16 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ;        twi_reset();
 000071 dfe9      	RCALL _twi_reset_G000
                  ;        return;
-000072 c185      	RJMP _0xAF
+000072 c185      	RJMP _0xC4
                  ;    }
                  ;
                  ;    of_state = of_state_check_address;
                  _0x8:
 000073 e0e0      	LDI  R30,LOW(0)
-000074 d20c      	RCALL SUBOPT_0x1
+000074 d240      	RCALL SUBOPT_0x1
                  ;    ss_state = ss_state_after_start;
 000075 e0e1      	LDI  R30,LOW(1)
-000076 d20d      	RCALL SUBOPT_0x2
+000076 d241      	RCALL SUBOPT_0x2
                  ;    USIDR = 0xff;
 000077 efef      	LDI  R30,LOW(255)
 000078 b9ef      	OUT  0xF,R30
@@ -1348,19 +1348,19 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 00007b ede0      	LDI  R30,LOW(208)
 00007c b9ee      	OUT  0xE,R30
                  ;}
-00007d c17a      	RJMP _0xAF
+00007d c17a      	RJMP _0xC4
                  ;
                  ;
                  ;// USI counter overflow interrupt service routine
                  ;interrupt [USI_OVERFLOW] void usi_ovf_isr(void){
                  _usi_ovf_isr:
-00007e d1f4      	RCALL SUBOPT_0x0
+00007e d228      	RCALL SUBOPT_0x0
                  ;    // bit shift register overflow condition occured
                  ;    // scl forced low until overflow condition is cleared!
                  ;    uint8_t data = USIDR;
                  ;    uint8_t set_counter = 0x00; // send 8 bits (16 edges)
                  ;again:
-00007f d29e      	RCALL __SAVELOCR2
+00007f d2d6      	RCALL __SAVELOCR2
                  ;	data -> R17
                  ;	set_counter -> R16
 000080 b11f      	IN   R17,15
@@ -1368,7 +1368,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  _0x9:
                  ;    switch(of_state){
 000082 91e0 0084 	LDS  R30,_of_state_G000
-000084 d202      	RCALL SUBOPT_0x3
+000084 d236      	RCALL SUBOPT_0x3
                  ;    // start condition occured and succeed
                  ;    // check address, if not OK, reset usi
                  ;    // note: not using general call address
@@ -1387,7 +1387,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ;            address = (data & 0xfe) >> 1;
 00008b 2fe1      	MOV  R30,R17
 00008c 7fee      	ANDI R30,0xFE
-00008d d1f9      	RCALL SUBOPT_0x3
+00008d d22d      	RCALL SUBOPT_0x3
 00008e 95f5      	ASR  R31
 00008f 95e7      	ROR  R30
 000090 83e9      	STD  Y+1,R30
@@ -1398,23 +1398,23 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 000095 f471      	BRNE _0xE
                  ;                ss_state = ss_state_address_selected;
 000096 e0e2      	LDI  R30,LOW(2)
-000097 d1ec      	RCALL SUBOPT_0x2
+000097 d220      	RCALL SUBOPT_0x2
                  ;                if(direction){ // read request from master
 000098 81e8      	LD   R30,Y
 000099 30e0      	CPI  R30,0
 00009a f011      	BREQ _0xF
                  ;                    of_state = of_state_send_data;
 00009b e0e1      	LDI  R30,LOW(1)
-00009c c001      	RJMP _0xAA
+00009c c001      	RJMP _0xBE
                  ;                }else{    // write request from master
                  _0xF:
                  ;                    of_state = of_state_receive_data;
 00009d e0e4      	LDI  R30,LOW(4)
-                 _0xAA:
+                 _0xBE:
 00009e 93e0 0084 	STS  _of_state_G000,R30
                  ;                }
                  ;                USIDR = 0x00;
-0000a0 d1e8      	RCALL SUBOPT_0x4
+0000a0 d21c      	RCALL SUBOPT_0x4
                  ;                set_counter = 0x0e; // send 1 bit (2 edges)
 0000a1 e00e      	LDI  R16,LOW(14)
                  ;                set_sda_to_output(); // initiate send ack
@@ -1423,14 +1423,14 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0000a3 c005      	RJMP _0x11
                  _0xE:
                  ;                USIDR = 0x00;
-0000a4 d1e4      	RCALL SUBOPT_0x4
+0000a4 d218      	RCALL SUBOPT_0x4
                  ;                set_counter = 0x00;
 0000a5 e000      	LDI  R16,LOW(0)
                  ;                twi_reset_state();
 0000a6 dfaf      	RCALL _twi_reset_state_G000
                  ;                ss_state = ss_state_address_not_selected;
 0000a7 e0e3      	LDI  R30,LOW(3)
-0000a8 d1db      	RCALL SUBOPT_0x2
+0000a8 d20f      	RCALL SUBOPT_0x2
                  ;            }
                  _0x11:
                  ;            break;
@@ -1446,10 +1446,10 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0000ae f4b9      	BRNE _0x12
                  ;            ss_state = ss_state_data_processed;
 0000af e0e4      	LDI  R30,LOW(4)
-0000b0 d1d3      	RCALL SUBOPT_0x2
+0000b0 d207      	RCALL SUBOPT_0x2
                  ;            of_state = of_state_request_ack;
 0000b1 e0e2      	LDI  R30,LOW(2)
-0000b2 d1ce      	RCALL SUBOPT_0x1
+0000b2 d202      	RCALL SUBOPT_0x1
                  ;            if(output_buffer_current < output_buffer_length){
 0000b3 91e0 00a8 	LDS  R30,_output_buffer_length_G000
 0000b5 91a0 00a9 	LDS  R26,_output_buffer_current_G000
@@ -1462,18 +1462,18 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0000be 50e1      	SUBI R30,LOW(1)
 0000bf 56e8      	SUBI R30,-LOW(_output_buffer_G000)
 0000c0 81e0      	LD   R30,Z
-0000c1 c001      	RJMP _0xAB
+0000c1 c001      	RJMP _0xBF
                  ;            }else{
                  _0x13:
                  ;                USIDR = 0x00; // no more data, but cannot send "nothing" or "nak"
 0000c2 e0e0      	LDI  R30,LOW(0)
-                 _0xAB:
+                 _0xBF:
 0000c3 b9ef      	OUT  0xF,R30
                  ;            }
                  ;            set_counter = 0x00;
 0000c4 e000      	LDI  R16,LOW(0)
                  ;            set_sda_to_output(); // initiate send data
-0000c5 c038      	RJMP _0xAC
+0000c5 c038      	RJMP _0xC0
                  ;            break;
                  ;        }
                  ;        // data sent to master, request ack (or nack) from master
@@ -1485,9 +1485,9 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0000c9 f431      	BRNE _0x15
                  ;            of_state = of_state_check_ack;
 0000ca e0e3      	LDI  R30,LOW(3)
-0000cb d1b5      	RCALL SUBOPT_0x1
+0000cb d1e9      	RCALL SUBOPT_0x1
                  ;            USIDR = 0x00;
-0000cc d1bc      	RCALL SUBOPT_0x4
+0000cc d1f0      	RCALL SUBOPT_0x4
                  ;            set_counter = 0x0e; // receive 1 bit (2 edges)
 0000cd e00e      	LDI  R16,LOW(14)
                  ;            set_sda_to_input(); // initiate receive ack
@@ -1507,7 +1507,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0000d5 f029      	BREQ _0x17
                  ;                of_state = of_state_check_address;
 0000d6 e0e0      	LDI  R30,LOW(0)
-0000d7 d1a9      	RCALL SUBOPT_0x1
+0000d7 d1dd      	RCALL SUBOPT_0x1
                  ;                set_counter = 0x00;
 0000d8 e000      	LDI  R16,LOW(0)
                  ;                twi_reset();
@@ -1517,7 +1517,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  _0x17:
                  ;                of_state = of_state_send_data;
 0000db e0e1      	LDI  R30,LOW(1)
-0000dc d1a4      	RCALL SUBOPT_0x1
+0000dc d1d8      	RCALL SUBOPT_0x1
                  ;                goto again; // from here we just drop straight into state_send_data
 0000dd cfa4      	RJMP _0x9
                  ;            } // don't wait for another overflow interrupt
@@ -1534,10 +1534,10 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0000e2 f439      	BRNE _0x19
                  ;            ss_state = ss_state_data_processed;
 0000e3 e0e4      	LDI  R30,LOW(4)
-0000e4 d19f      	RCALL SUBOPT_0x2
+0000e4 d1d3      	RCALL SUBOPT_0x2
                  ;            of_state = of_state_store_data_and_send_ack;
 0000e5 e0e5      	LDI  R30,LOW(5)
-0000e6 d19a      	RCALL SUBOPT_0x1
+0000e6 d1ce      	RCALL SUBOPT_0x1
                  ;            set_counter = 0x00; // receive 1 bit (2 edges)
 0000e7 e000      	LDI  R16,LOW(0)
                  ;            set_sda_to_input(); // initiate receive data
@@ -1554,7 +1554,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0000ed f489      	BRNE _0xC
                  ;            of_state = of_state_receive_data;
 0000ee e0e4      	LDI  R30,LOW(4)
-0000ef d191      	RCALL SUBOPT_0x1
+0000ef d1c5      	RCALL SUBOPT_0x1
                  ;            if(input_buffer_length < (USI_TWI_BUFFER_SIZE - 1)){
 0000f0 91a0 0097 	LDS  R26,_input_buffer_length_G000
 0000f2 30af      	CPI  R26,LOW(0xF)
@@ -1569,11 +1569,11 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ;            }
                  ;            USIDR = 0x00;
                  _0x1B:
-0000fc d18c      	RCALL SUBOPT_0x4
+0000fc d1c0      	RCALL SUBOPT_0x4
                  ;            set_counter = 0x0e; // send 1 bit (2 edges)
 0000fd e00e      	LDI  R16,LOW(14)
                  ;            set_sda_to_output(); // initiate send ack
-                 _0xAC:
+                 _0xC0:
 0000fe df49      	RCALL _set_sda_to_output_G000
                  ;            break;
                  ;        }
@@ -1589,8 +1589,8 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 000100 65e0      	ORI  R30,LOW(0x50)
 000101 b9ee      	OUT  0xE,R30
                  ;}
-000102 d21e      	RCALL __LOADLOCR2P
-000103 c0f4      	RJMP _0xAF
+000102 d256      	RCALL __LOADLOCR2P
+000103 c0f4      	RJMP _0xC4
                  ;
                  ;void usi_twi_slave(uint8_t slave_address_in, uint8_t use_sleep, void (*data_callback_in)(uint8_t input_buffer_length,
                  ;                    const uint8_t *input_buffer, uint8_t *output_buffer_length, uint8_t *output_buffer),void (*idle_callback_in)(void)){
@@ -1800,14 +1800,14 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ; 0000 0049     OCR0A = (ui8) (pwmValues >> 8);
 00012e e0a0      	LDI  R26,LOW(_pwmValues)
 00012f e0b0      	LDI  R27,HIGH(_pwmValues)
-000130 d1c6      	RCALL __EEPROMRDW
+000130 d1fe      	RCALL __EEPROMRDW
 000131 2fef      	MOV  R30,R31
 000132 e0f0      	LDI  R31,0
 000133 bfe6      	OUT  0x36,R30
                  ; 0000 004A     OCR0B = (ui8) pwmValues;
 000134 e0a0      	LDI  R26,LOW(_pwmValues)
 000135 e0b0      	LDI  R27,HIGH(_pwmValues)
-000136 d1c4      	RCALL __EEPROMRDB
+000136 d1fc      	RCALL __EEPROMRDB
 000137 bfec      	OUT  0x3C,R30
                  ; 0000 004B }
 000138 9508      	RET
@@ -1818,7 +1818,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ; 0000 004E     ui16 buffer = 0;
                  ; 0000 004F 
                  ; 0000 0050     buffer = OCR0A;
-000139 d1e4      	RCALL __SAVELOCR2
+000139 d21c      	RCALL __SAVELOCR2
                  ;	buffer -> R16,R17
                 +
 00013a e000     +LDI R16 , LOW ( 0 )
@@ -1831,7 +1831,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 00013f 2700      	CLR  R16
                  ; 0000 0052     buffer |= OCR0B;
 000140 b7ec      	IN   R30,0x3C
-000141 d145      	RCALL SUBOPT_0x3
+000141 d179      	RCALL SUBOPT_0x3
                 +
 000142 2b0e     +OR R16 , R30
 000143 2b1f     +OR R17 , R31
@@ -1840,16 +1840,16 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 000144 01f8      	MOVW R30,R16
 000145 e0a0      	LDI  R26,LOW(_pwmValues)
 000146 e0b0      	LDI  R27,HIGH(_pwmValues)
-000147 d1be      	RCALL __EEPROMWRW
+000147 d1f6      	RCALL __EEPROMWRW
                  ; 0000 0054 }
-000148 d1d8      	RCALL __LOADLOCR2P
+000148 d210      	RCALL __LOADLOCR2P
 000149 9508      	RET
                  ;
                  ;static void increasePwm(void){
                  ; 0000 0056 static void increasePwm(void){
                  _increasePwm_G000:
                  ; 0000 0057     if(!settingTarget){
-00014a d141      	RCALL SUBOPT_0x5
+00014a d175      	RCALL SUBOPT_0x5
 00014b f461      	BRNE _0x32
                  ; 0000 0058         if(OCR0A > 0xFD) OCR0A = 0xFF;
 00014c b7e6      	IN   R30,0x36
@@ -1898,7 +1898,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ; 0000 0065 static void decreasePwm(void){
                  _decreasePwm_G000:
                  ; 0000 0066     if(!settingTarget){
-000164 d127      	RCALL SUBOPT_0x5
+000164 d15b      	RCALL SUBOPT_0x5
 000165 f469      	BRNE _0x38
                  ; 0000 0067         if(OCR0A == 1) OCR0A = 0;
 000166 b7e6      	IN   R30,0x36
@@ -1913,7 +1913,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 00016d f020      	BRLO _0x3A
                  ; 0000 0069             OCR0A -= 2;
 00016e b7e6      	IN   R30,0x36
-00016f d117      	RCALL SUBOPT_0x3
+00016f d14b      	RCALL SUBOPT_0x3
 000170 9732      	SBIW R30,2
 000171 bfe6      	OUT  0x36,R30
                  ; 0000 006A     }else{
@@ -1933,7 +1933,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 00017a f020      	BRLO _0x3D
                  ; 0000 006D             OCR0B -= 2;
 00017b b7ec      	IN   R30,0x3C
-00017c d10a      	RCALL SUBOPT_0x3
+00017c d13e      	RCALL SUBOPT_0x3
 00017d 9732      	SBIW R30,2
 00017e bfec      	OUT  0x3C,R30
                  ; 0000 006E     }
@@ -1951,11 +1951,11 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ; 0000 0073     settingTarget = !settingTarget;
 000181 e0a2      	LDI  R26,LOW(_settingTarget)
 000182 e0b0      	LDI  R27,HIGH(_settingTarget)
-000183 d177      	RCALL __EEPROMRDB
-000184 d147      	RCALL __LNEGB1
+000183 d1af      	RCALL __EEPROMRDB
+000184 d17f      	RCALL __LNEGB1
 000185 e0a2      	LDI  R26,LOW(_settingTarget)
 000186 e0b0      	LDI  R27,HIGH(_settingTarget)
-000187 d186      	RCALL __EEPROMWRB
+000187 d1be      	RCALL __EEPROMWRB
                  ; 0000 0074 }
 000188 9508      	RET
                  ;
@@ -2002,7 +2002,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ; 0000 0085     setOut1StateTo(!(outputStates & 1));
 000197 2de5      	MOV  R30,R5
 000198 70e1      	ANDI R30,LOW(0x1)
-000199 d132      	RCALL __LNEGB1
+000199 d16a      	RCALL __LNEGB1
 00019a 93ea      	ST   -Y,R30
 00019b dff4      	RCALL _setOut1StateTo
                  ; 0000 0086 }
@@ -2055,7 +2055,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ; 0000 0097     setOut2StateTo(!(outputStates & 2));
 0001ad 2de5      	MOV  R30,R5
 0001ae 70e2      	ANDI R30,LOW(0x2)
-0001af d11c      	RCALL __LNEGB1
+0001af d154      	RCALL __LNEGB1
 0001b0 93ea      	ST   -Y,R30
 0001b1 dff3      	RCALL _setOut2StateTo
                  ; 0000 0098 }
@@ -2066,20 +2066,20 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ;interrupt [PC_INT] void pin_change_isr0(void){
                  ; 0000 009C interrupt [12] void pin_change_isr0(void){
                  _pin_change_isr0:
-0001b3 d0bf      	RCALL SUBOPT_0x0
+0001b3 d0f3      	RCALL SUBOPT_0x0
                  ; 0000 009D     if(BV(lastPortBValue,4) != BV(PINB,4)){
 0001b4 2de4      	MOV  R30,R4
-0001b5 d0db      	RCALL SUBOPT_0x6
-0001b6 d0de      	RCALL SUBOPT_0x7
-0001b7 d0d9      	RCALL SUBOPT_0x6
+0001b5 d10f      	RCALL SUBOPT_0x6
+0001b6 d112      	RCALL SUBOPT_0x7
+0001b7 d10d      	RCALL SUBOPT_0x6
 0001b8 17ea      	CP   R30,R26
 0001b9 f079      	BREQ _0x42
                  ; 0000 009E         if(!BV(PINB, 4)){
 0001ba b3e6      	IN   R30,0x16
-0001bb d0d5      	RCALL SUBOPT_0x6
+0001bb d109      	RCALL SUBOPT_0x6
 0001bc f431      	BRNE _0x43
                  ; 0000 009F             if(BV(PINB, 3))
-0001bd d0da      	RCALL SUBOPT_0x8
+0001bd d10e      	RCALL SUBOPT_0x8
 0001be f011      	BREQ _0x44
                  ; 0000 00A0                 decreasePwm();//1
 0001bf dfa4      	RCALL _decreasePwm_G000
@@ -2093,7 +2093,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0001c2 c005      	RJMP _0x46
                  _0x43:
                  ; 0000 00A4             if(BV(PINB, 3))
-0001c3 d0d4      	RCALL SUBOPT_0x8
+0001c3 d108      	RCALL SUBOPT_0x8
 0001c4 f011      	BREQ _0x47
                  ; 0000 00A5                 increasePwm();
 0001c5 df84      	RCALL _increasePwm_G000
@@ -2109,12 +2109,12 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0001c8 c02e      	RJMP _0x49
                  _0x42:
 0001c9 2de4      	MOV  R30,R4
-0001ca d0bc      	RCALL SUBOPT_0x3
-0001cb d0f9      	RCALL __ASRW3
+0001ca d0f0      	RCALL SUBOPT_0x3
+0001cb d125      	RCALL __ASRW3
 0001cc 70e1      	ANDI R30,LOW(0x1)
-0001cd d0c7      	RCALL SUBOPT_0x7
-0001ce d0b8      	RCALL SUBOPT_0x3
-0001cf d0f5      	RCALL __ASRW3
+0001cd d0fb      	RCALL SUBOPT_0x7
+0001ce d0ec      	RCALL SUBOPT_0x3
+0001cf d121      	RCALL __ASRW3
 0001d0 70e1      	ANDI R30,LOW(0x1)
 0001d1 17ea      	CP   R30,R26
 0001d2 f521      	BRNE _0x4B
@@ -2123,14 +2123,14 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
 0001d3 2da4      	MOV  R26,R4
 0001d4 e0b0      	LDI  R27,0
 0001d5 e0e6      	LDI  R30,LOW(6)
-0001d6 d0e3      	RCALL __ASRW12
+0001d6 d10f      	RCALL __ASRW12
 0001d7 70e1      	ANDI R30,LOW(0x1)
-0001d8 d0bc      	RCALL SUBOPT_0x7
-0001d9 d0c3      	RCALL SUBOPT_0x9
+0001d8 d0f0      	RCALL SUBOPT_0x7
+0001d9 d0f7      	RCALL SUBOPT_0x9
 0001da 17ea      	CP   R30,R26
 0001db f019      	BREQ _0x4D
 0001dc b3e6      	IN   R30,0x16
-0001dd d0bf      	RCALL SUBOPT_0x9
+0001dd d0f3      	RCALL SUBOPT_0x9
 0001de f409      	BRNE _0x4E
                  _0x4D:
 0001df c002      	RJMP _0x4C
@@ -2142,7 +2142,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  _0x4C:
 0001e2 2de4      	MOV  R30,R4
 0001e3 70e2      	ANDI R30,LOW(0x2)
-0001e4 d0b0      	RCALL SUBOPT_0x7
+0001e4 d0e4      	RCALL SUBOPT_0x7
 0001e5 70e2      	ANDI R30,LOW(0x2)
 0001e6 17ea      	CP   R30,R26
 0001e7 f011      	BREQ _0x51
@@ -2158,7 +2158,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  _0x50:
 0001ed 2de4      	MOV  R30,R4
 0001ee 70e1      	ANDI R30,LOW(0x1)
-0001ef d0a5      	RCALL SUBOPT_0x7
+0001ef d0d9      	RCALL SUBOPT_0x7
 0001f0 70e1      	ANDI R30,LOW(0x1)
 0001f1 17ea      	CP   R30,R26
 0001f2 f011      	BREQ _0x55
@@ -2178,7 +2178,7 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  _0x49:
 0001f7 b246      	IN   R4,22
                  ; 0000 00B3 }
-                 _0xAF:
+                 _0xC4:
 0001f8 91e9      	LD   R30,Y+
 0001f9 bfef      	OUT  SREG,R30
 0001fa 91f9      	LD   R31,Y+
@@ -2198,227 +2198,349 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  ; 0000 00B5 void displayVal(ui8 val){
                  _displayVal:
                  ; 0000 00B6     ui8 value;
-                 ; 0000 00B7     PORTD.0 = 0;
+                 ; 0000 00B7     if(val > 128){
 000206 931a      	ST   -Y,R17
                  ;	val -> Y+1
                  ;	value -> R17
-000207 9890      	CBI  0x12,0
-                 ; 0000 00B8     PORTD.1 = 0;
-000208 d099      	RCALL SUBOPT_0xA
-                 ; 0000 00B9     PORTA.1 = 0;
-                 ; 0000 00BA     PORTA.0 = 0;
-                 ; 0000 00BB     PORTD.2 = 0;
-                 ; 0000 00BC     if(val > 85){
-000209 81a9      	LDD  R26,Y+1
-00020a 35a6      	CPI  R26,LOW(0x56)
-00020b f1a8      	BRLO _0x61
-                 ; 0000 00BD         value = (val - 85) / 34;
-00020c 81e9      	LDD  R30,Y+1
-00020d d079      	RCALL SUBOPT_0x3
-00020e 55e5      	SUBI R30,LOW(85)
-00020f 40f0      	SBCI R31,HIGH(85)
-000210 01df      	MOVW R26,R30
-000211 e2e2      	LDI  R30,LOW(34)
-000212 e0f0      	LDI  R31,HIGH(34)
-000213 d0d0      	RCALL __DIVW21
-000214 2f1e      	MOV  R17,R30
-                 ; 0000 00BE         switch(value){
-000215 2fe1      	MOV  R30,R17
-000216 d070      	RCALL SUBOPT_0x3
-                 ; 0000 00BF             case(1):{
-000217 30e1      	CPI  R30,LOW(0x1)
-000218 e0a0      	LDI  R26,HIGH(0x1)
-000219 07fa      	CPC  R31,R26
-00021a f419      	BRNE _0x65
-                 ; 0000 00C0                 PORTD.0 = 1;
-00021b 9a90      	SBI  0x12,0
-                 ; 0000 00C1                 PORTD.1 = 0;
-00021c d085      	RCALL SUBOPT_0xA
-                 ; 0000 00C2                 PORTA.1 = 0;
-                 ; 0000 00C3                 PORTA.0 = 0;
-                 ; 0000 00C4                 PORTD.2 = 0;
-                 ; 0000 00C5                 break;
-00021d c023      	RJMP _0x64
-                 ; 0000 00C6             }
-                 ; 0000 00C7             case(2):{
-                 _0x65:
-00021e 30e2      	CPI  R30,LOW(0x2)
-00021f e0a0      	LDI  R26,HIGH(0x2)
-000220 07fa      	CPC  R31,R26
-000221 f429      	BRNE _0x70
-                 ; 0000 00C8                 PORTD.0 = 1;
-000222 d084      	RCALL SUBOPT_0xB
-                 ; 0000 00C9                 PORTD.1 = 1;
-                 ; 0000 00CA                 PORTA.1 = 0;
-000223 98d9      	CBI  0x1B,1
-                 ; 0000 00CB                 PORTA.0 = 0;
-000224 98d8      	CBI  0x1B,0
-                 ; 0000 00CC                 PORTD.2 = 0;
-000225 9892      	CBI  0x12,2
-                 ; 0000 00CD                 break;
-000226 c01a      	RJMP _0x64
-                 ; 0000 00CE             }
-                 ; 0000 00CF             case(3):{
-                 _0x70:
-000227 30e3      	CPI  R30,LOW(0x3)
-000228 e0a0      	LDI  R26,HIGH(0x3)
-000229 07fa      	CPC  R31,R26
-00022a f429      	BRNE _0x7B
-                 ; 0000 00D0                 PORTD.0 = 1;
-00022b d07b      	RCALL SUBOPT_0xB
-                 ; 0000 00D1                 PORTD.1 = 1;
-                 ; 0000 00D2                 PORTA.1 = 1;
-00022c 9ad9      	SBI  0x1B,1
-                 ; 0000 00D3                 PORTA.0 = 0;
-00022d 98d8      	CBI  0x1B,0
-                 ; 0000 00D4                 PORTD.2 = 0;
-00022e 9892      	CBI  0x12,2
-                 ; 0000 00D5                 break;
-00022f c011      	RJMP _0x64
-                 ; 0000 00D6             }
-                 ; 0000 00D7             case(4):{
-                 _0x7B:
-000230 30e4      	CPI  R30,LOW(0x4)
-000231 e0a0      	LDI  R26,HIGH(0x4)
-000232 07fa      	CPC  R31,R26
-000233 f429      	BRNE _0x86
-                 ; 0000 00D8                 PORTD.0 = 1;
-000234 d072      	RCALL SUBOPT_0xB
-                 ; 0000 00D9                 PORTD.1 = 1;
-                 ; 0000 00DA                 PORTA.1 = 1;
-000235 9ad9      	SBI  0x1B,1
-                 ; 0000 00DB                 PORTA.0 = 1;
-000236 9ad8      	SBI  0x1B,0
-                 ; 0000 00DC                 PORTD.2 = 0;
-000237 9892      	CBI  0x12,2
-                 ; 0000 00DD                 break;
-000238 c008      	RJMP _0x64
-                 ; 0000 00DE             }
-                 ; 0000 00DF             case(5):{
-                 _0x86:
-000239 30e5      	CPI  R30,LOW(0x5)
-00023a e0a0      	LDI  R26,HIGH(0x5)
-00023b 07fa      	CPC  R31,R26
-00023c f421      	BRNE _0x64
-                 ; 0000 00E0                 PORTD.0 = 1;
-00023d d069      	RCALL SUBOPT_0xB
+000207 81a9      	LDD  R26,Y+1
+000208 38a1      	CPI  R26,LOW(0x81)
+000209 f1b0      	BRLO _0x57
+                 ; 0000 00B8         value = (val - 128) / 25;
+00020a 81e9      	LDD  R30,Y+1
+00020b d0af      	RCALL SUBOPT_0x3
+00020c 58e0      	SUBI R30,LOW(128)
+00020d 40f0      	SBCI R31,HIGH(128)
+00020e 01df      	MOVW R26,R30
+00020f e1e9      	LDI  R30,LOW(25)
+000210 e0f0      	LDI  R31,HIGH(25)
+000211 d10a      	RCALL __DIVW21
+000212 2f1e      	MOV  R17,R30
+                 ; 0000 00B9         switch(value){
+000213 2fe1      	MOV  R30,R17
+000214 d0a6      	RCALL SUBOPT_0x3
+                 ; 0000 00BA             case(1):{
+000215 30e1      	CPI  R30,LOW(0x1)
+000216 e0a0      	LDI  R26,HIGH(0x1)
+000217 07fa      	CPC  R31,R26
+000218 f419      	BRNE _0x5B
+                 ; 0000 00BB //                PORTD.0 = 1;
+                 ; 0000 00BC                 PORTD.6 = 1;
+000219 9a96      	SBI  0x12,6
+                 ; 0000 00BD                 PORTD.1 = 0;
+00021a d0bb      	RCALL SUBOPT_0xA
+                 ; 0000 00BE                 PORTA.1 = 0;
+                 ; 0000 00BF                 PORTA.0 = 0;
+                 ; 0000 00C0                 PORTD.2 = 0;
+                 ; 0000 00C1                 break;
+00021b c023      	RJMP _0x5A
+                 ; 0000 00C2             }
+                 ; 0000 00C3             case(2):{
+                 _0x5B:
+00021c 30e2      	CPI  R30,LOW(0x2)
+00021d e0a0      	LDI  R26,HIGH(0x2)
+00021e 07fa      	CPC  R31,R26
+00021f f429      	BRNE _0x66
+                 ; 0000 00C4 //                PORTD.0 = 1;
+                 ; 0000 00C5                 PORTD.6 = 1;
+000220 d0ba      	RCALL SUBOPT_0xB
+                 ; 0000 00C6                 PORTD.1 = 1;
+                 ; 0000 00C7                 PORTA.1 = 0;
+000221 98d9      	CBI  0x1B,1
+                 ; 0000 00C8                 PORTA.0 = 0;
+000222 98d8      	CBI  0x1B,0
+                 ; 0000 00C9                 PORTD.2 = 0;
+000223 9892      	CBI  0x12,2
+                 ; 0000 00CA                 break;
+000224 c01a      	RJMP _0x5A
+                 ; 0000 00CB             }
+                 ; 0000 00CC             case(3):{
+                 _0x66:
+000225 30e3      	CPI  R30,LOW(0x3)
+000226 e0a0      	LDI  R26,HIGH(0x3)
+000227 07fa      	CPC  R31,R26
+000228 f429      	BRNE _0x71
+                 ; 0000 00CD //                PORTD.0 = 1;
+                 ; 0000 00CE                 PORTD.6 = 1;
+000229 d0b1      	RCALL SUBOPT_0xB
+                 ; 0000 00CF                 PORTD.1 = 1;
+                 ; 0000 00D0                 PORTA.1 = 1;
+00022a 9ad9      	SBI  0x1B,1
+                 ; 0000 00D1                 PORTA.0 = 0;
+00022b 98d8      	CBI  0x1B,0
+                 ; 0000 00D2                 PORTD.2 = 0;
+00022c 9892      	CBI  0x12,2
+                 ; 0000 00D3                 break;
+00022d c011      	RJMP _0x5A
+                 ; 0000 00D4             }
+                 ; 0000 00D5             case(4):{
+                 _0x71:
+00022e 30e4      	CPI  R30,LOW(0x4)
+00022f e0a0      	LDI  R26,HIGH(0x4)
+000230 07fa      	CPC  R31,R26
+000231 f429      	BRNE _0x7C
+                 ; 0000 00D6 //                PORTD.0 = 1;
+                 ; 0000 00D7                 PORTD.6 = 1;
+000232 d0a8      	RCALL SUBOPT_0xB
+                 ; 0000 00D8                 PORTD.1 = 1;
+                 ; 0000 00D9                 PORTA.1 = 1;
+000233 9ad9      	SBI  0x1B,1
+                 ; 0000 00DA                 PORTA.0 = 1;
+000234 9ad8      	SBI  0x1B,0
+                 ; 0000 00DB                 PORTD.2 = 0;
+000235 9892      	CBI  0x12,2
+                 ; 0000 00DC                 break;
+000236 c008      	RJMP _0x5A
+                 ; 0000 00DD             }
+                 ; 0000 00DE             case(5):{
+                 _0x7C:
+000237 30e5      	CPI  R30,LOW(0x5)
+000238 e0a0      	LDI  R26,HIGH(0x5)
+000239 07fa      	CPC  R31,R26
+00023a f421      	BRNE _0x5A
+                 ; 0000 00DF //                PORTD.0 = 1;
+                 ; 0000 00E0                 PORTD.6 = 1;
+00023b d09f      	RCALL SUBOPT_0xB
                  ; 0000 00E1                 PORTD.1 = 1;
                  ; 0000 00E2                 PORTA.1 = 1;
-00023e 9ad9      	SBI  0x1B,1
+00023c 9ad9      	SBI  0x1B,1
                  ; 0000 00E3                 PORTA.0 = 1;
-00023f 9ad8      	SBI  0x1B,0
+00023d 9ad8      	SBI  0x1B,0
                  ; 0000 00E4                 PORTD.2 = 1;
-000240 9a92      	SBI  0x12,2
+00023e 9a92      	SBI  0x12,2
                  ; 0000 00E5                 break;
                  ; 0000 00E6             }
                  ; 0000 00E7         }
-                 _0x64:
-                 ; 0000 00E8     }
-                 ; 0000 00E9     PORTD.6 = !!val;//first led
-                 _0x61:
-000241 81e9      	LDD  R30,Y+1
-000242 30e0      	CPI  R30,0
-000243 f411      	BRNE _0x9C
-000244 9896      	CBI  0x12,6
-000245 c001      	RJMP _0x9D
-                 _0x9C:
-000246 9a96      	SBI  0x12,6
-                 _0x9D:
-                 ; 0000 00EA }
-000247 8118      	LDD  R17,Y+0
-000248 9622      	ADIW R28,2
-000249 9508      	RET
+                 _0x5A:
+                 ; 0000 00E8     }else{
+00023f c003      	RJMP _0x92
+                 _0x57:
+                 ; 0000 00E9         PORTD.6 = 0;
+000240 9896      	CBI  0x12,6
+                 ; 0000 00EA         PORTD.0 = 0;
+000241 9890      	CBI  0x12,0
+                 ; 0000 00EB         PORTD.1 = 0;
+000242 d093      	RCALL SUBOPT_0xA
+                 ; 0000 00EC         PORTA.1 = 0;
+                 ; 0000 00ED         PORTA.0 = 0;
+                 ; 0000 00EE         PORTD.2 = 0;
+                 ; 0000 00EF     }
+                 _0x92:
+                 ; 0000 00F0 
+                 ; 0000 00F1 }
+000243 8118      	LDD  R17,Y+0
+000244 9622      	ADIW R28,2
+000245 9508      	RET
                  ;
                  ;void main(void){
-                 ; 0000 00EC void main(void){
+                 ; 0000 00F3 void main(void){
                  _main:
-                 ; 0000 00ED ui8 toggler = 0;
-                 ; 0000 00EE     // Crystal Oscillator division factor: 1
-                 ; 0000 00EF #pragma optsize-
-                 ; 0000 00F0 CLKPR=0x80;
+                 ; 0000 00F4 ui8 toggler = 0;
+                 ; 0000 00F5 ui16 counter = 0;
+                 ; 0000 00F6     // Crystal Oscillator division factor: 1
+                 ; 0000 00F7 #pragma optsize-
+                 ; 0000 00F8 CLKPR=0x80;
                  ;	toggler -> R17
-00024a e010      	LDI  R17,0
-00024b e8e0      	LDI  R30,LOW(128)
+                 ;	counter -> R18,R19
+000246 e010      	LDI  R17,0
+                +
+000247 e020     +LDI R18 , LOW ( 0 )
+000248 e030     +LDI R19 , HIGH ( 0 )
+                 	__GETWRN 18,19,0
+000249 e8e0      	LDI  R30,LOW(128)
+00024a bde6      	OUT  0x26,R30
+                 ; 0000 00F9 CLKPR=0x00;
+00024b e0e0      	LDI  R30,LOW(0)
 00024c bde6      	OUT  0x26,R30
-                 ; 0000 00F1 CLKPR=0x00;
-00024d e0e0      	LDI  R30,LOW(0)
-00024e bde6      	OUT  0x26,R30
-                 ; 0000 00F2 #ifdef _OPTIMIZE_SIZE_
-                 ; 0000 00F3 #pragma optsize+
-                 ; 0000 00F4 #endif
-                 ; 0000 00F5 
-                 ; 0000 00F6     configure();
-00024f deb4      	RCALL _configure_G000
-                 ; 0000 00F7 
-                 ; 0000 00F8     restorePwmValues();
-000250 dedd      	RCALL _restorePwmValues
-                 ; 0000 00F9 
-                 ; 0000 00FA    // OCR0A = 255;
-                 ; 0000 00FB   //  OCR0B = 255;
-                 ; 0000 00FC 
-                 ; 0000 00FD    // usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
-                 ; 0000 00FE     #asm("sei")
-000251 9478      	sei
+                 ; 0000 00FA #ifdef _OPTIMIZE_SIZE_
+                 ; 0000 00FB #pragma optsize+
+                 ; 0000 00FC #endif
+                 ; 0000 00FD 
+                 ; 0000 00FE     configure();
+00024d deb6      	RCALL _configure_G000
                  ; 0000 00FF 
-                 ; 0000 0100     while (1){
-                 _0x9E:
+                 ; 0000 0100     restorePwmValues();
+00024e dedf      	RCALL _restorePwmValues
                  ; 0000 0101 
-                 ; 0000 0102         PORTD.3 = !!(outputStates & 1);//0
-000252 fc50      	SBRC R5,0
-000253 c002      	RJMP _0xA1
-000254 9893      	CBI  0x12,3
-000255 c001      	RJMP _0xA2
-                 _0xA1:
-000256 9a93      	SBI  0x12,3
-                 _0xA2:
-                 ; 0000 0103         PORTD.4 = !!(outputStates & 2);//1
-000257 fc51      	SBRC R5,1
-000258 c002      	RJMP _0xA3
-000259 9894      	CBI  0x12,4
-00025a c001      	RJMP _0xA4
-                 _0xA3:
-00025b 9a94      	SBI  0x12,4
+                 ; 0000 0102    // usi_twi_slave(TWI_ADDRESS, 0, on_twi_receive, NULL);
+                 ; 0000 0103     #asm("sei")
+00024f 9478      	sei
+                 ; 0000 0104 
+                 ; 0000 0105     while (1){
+                 _0x9F:
+                 ; 0000 0106 
+                 ; 0000 0107         if(!settingTarget){
+000250 d06f      	RCALL SUBOPT_0x5
+000251 f531      	BRNE _0xA2
+                 ; 0000 0108 
+                 ; 0000 0109             if(!!(outputStates & 1))
+000252 fe50      	SBRS R5,0
+000253 c008      	RJMP _0xA3
+                 ; 0000 010A                 PORTD.3 = (counter > 400);
+000254 d089      	RCALL SUBOPT_0xC
+000255 d0a8      	RCALL __GTW12U
+000256 30e0      	CPI  R30,0
+000257 f411      	BRNE _0xA4
+000258 9893      	CBI  0x12,3
+000259 c001      	RJMP _0xA5
                  _0xA4:
-                 ; 0000 0104         if(!settingTarget){
-00025c d02f      	RCALL SUBOPT_0x5
-00025d f421      	BRNE _0xA5
-                 ; 0000 0105             displayVal(OCR0A);
-00025e b7e6      	IN   R30,0x36
-00025f 93ea      	ST   -Y,R30
-000260 dfa5      	RCALL _displayVal
-                 ; 0000 0106         }else{
-000261 c00f      	RJMP _0xA6
+00025a 9a93      	SBI  0x12,3
                  _0xA5:
-                 ; 0000 0107             if(toggler)
-000262 3010      	CPI  R17,0
-000263 f011      	BREQ _0xA7
-                 ; 0000 0108                 displayVal(OCR0B);
-000264 b7ec      	IN   R30,0x3C
-000265 c001      	RJMP _0xAE
-                 ; 0000 0109             else
+                 ; 0000 010B             else
+00025b c007      	RJMP _0xA6
+                 _0xA3:
+                 ; 0000 010C                 PORTD.3 = (counter < 400);
+00025c d081      	RCALL SUBOPT_0xC
+00025d d09a      	RCALL __LTW12U
+00025e 30e0      	CPI  R30,0
+00025f f411      	BRNE _0xA7
+000260 9893      	CBI  0x12,3
+000261 c001      	RJMP _0xA8
                  _0xA7:
-                 ; 0000 010A                 displayVal(0);
-000266 e0e0      	LDI  R30,LOW(0)
-                 _0xAE:
-000267 93ea      	ST   -Y,R30
-000268 df9d      	RCALL _displayVal
-                 ; 0000 010B             toggler = !toggler;
-000269 2fe1      	MOV  R30,R17
-00026a d061      	RCALL __LNEGB1
-00026b 2f1e      	MOV  R17,R30
-                 ; 0000 010C             delay_ms(LedDelay);
-00026c e3e2      	LDI  R30,LOW(50)
-00026d e0f0      	LDI  R31,HIGH(50)
-00026e 93fa      	ST   -Y,R31
-00026f 93ea      	ST   -Y,R30
-000270 d039      	RCALL _delay_ms
-                 ; 0000 010D         }
+000262 9a93      	SBI  0x12,3
+                 _0xA8:
+                 ; 0000 010D 
+                 ; 0000 010E             PORTD.4 = !!(outputStates & 2);
                  _0xA6:
-                 ; 0000 010E     };
-000271 cfe0      	RJMP _0x9E
-                 ; 0000 010F }
+000263 fc51      	SBRC R5,1
+000264 c002      	RJMP _0xA9
+000265 9894      	CBI  0x12,4
+000266 c001      	RJMP _0xAA
                  _0xA9:
-000272 cfff      	RJMP _0xA9
+000267 9a94      	SBI  0x12,4
+                 _0xAA:
+                 ; 0000 010F 
+                 ; 0000 0110 
+                 ; 0000 0111             if(OCR0A > 133)
+000268 b7e6      	IN   R30,0x36
+000269 38e6      	CPI  R30,LOW(0x86)
+00026a f010      	BRLO _0xAB
+                 ; 0000 0112                 displayVal(OCR0A);
+00026b b7e6      	IN   R30,0x36
+00026c c008      	RJMP _0xC2
+                 ; 0000 0113             else if(counter > 8000)
+                 _0xAB:
+                +
+00026d 3421     +CPI R18 , LOW ( 8001 )
+00026e e1ef     +LDI R30 , HIGH ( 8001 )
+00026f 073e     +CPC R19 , R30
+                 	__CPWRN 18,19,8001
+000270 f018      	BRLO _0xAD
+                 ; 0000 0114                 displayVal(OCR0A + 120);
+000271 b7e6      	IN   R30,0x36
+000272 58e8      	SUBI R30,-LOW(120)
+000273 c001      	RJMP _0xC2
+                 ; 0000 0115             else
+                 _0xAD:
+                 ; 0000 0116                 displayVal(0);
+000274 e0e0      	LDI  R30,LOW(0)
+                 _0xC2:
+000275 93ea      	ST   -Y,R30
+000276 df8f      	RCALL _displayVal
+                 ; 0000 0117 
+                 ; 0000 0118         }else{
+000277 c025      	RJMP _0xAF
+                 _0xA2:
+                 ; 0000 0119             PORTD.3 = !!(outputStates & 1);
+000278 fc50      	SBRC R5,0
+000279 c002      	RJMP _0xB0
+00027a 9893      	CBI  0x12,3
+00027b c001      	RJMP _0xB1
+                 _0xB0:
+00027c 9a93      	SBI  0x12,3
+                 _0xB1:
+                 ; 0000 011A 
+                 ; 0000 011B             if(!!(outputStates & 2))
+00027d fe51      	SBRS R5,1
+00027e c008      	RJMP _0xB2
+                 ; 0000 011C                 PORTD.4 = (counter > 400);
+00027f d05e      	RCALL SUBOPT_0xC
+000280 d07d      	RCALL __GTW12U
+000281 30e0      	CPI  R30,0
+000282 f411      	BRNE _0xB3
+000283 9894      	CBI  0x12,4
+000284 c001      	RJMP _0xB4
+                 _0xB3:
+000285 9a94      	SBI  0x12,4
+                 _0xB4:
+                 ; 0000 011D             else
+000286 c007      	RJMP _0xB5
+                 _0xB2:
+                 ; 0000 011E                 PORTD.4 = (counter < 400);
+000287 d056      	RCALL SUBOPT_0xC
+000288 d06f      	RCALL __LTW12U
+000289 30e0      	CPI  R30,0
+00028a f411      	BRNE _0xB6
+00028b 9894      	CBI  0x12,4
+00028c c001      	RJMP _0xB7
+                 _0xB6:
+00028d 9a94      	SBI  0x12,4
+                 _0xB7:
+                 ; 0000 011F 
+                 ; 0000 0120             if(OCR0B > 133)
+                 _0xB5:
+00028e b7ec      	IN   R30,0x3C
+00028f 38e6      	CPI  R30,LOW(0x86)
+000290 f010      	BRLO _0xB8
+                 ; 0000 0121                 displayVal(OCR0B);
+000291 b7ec      	IN   R30,0x3C
+000292 c008      	RJMP _0xC3
+                 ; 0000 0122             else if(counter > 8000)
+                 _0xB8:
+                +
+000293 3421     +CPI R18 , LOW ( 8001 )
+000294 e1ef     +LDI R30 , HIGH ( 8001 )
+000295 073e     +CPC R19 , R30
+                 	__CPWRN 18,19,8001
+000296 f018      	BRLO _0xBA
+                 ; 0000 0123                 displayVal(OCR0B + 120);
+000297 b7ec      	IN   R30,0x3C
+000298 58e8      	SUBI R30,-LOW(120)
+000299 c001      	RJMP _0xC3
+                 ; 0000 0124             else
+                 _0xBA:
+                 ; 0000 0125                 displayVal(0);;
+00029a e0e0      	LDI  R30,LOW(0)
+                 _0xC3:
+00029b 93ea      	ST   -Y,R30
+00029c df69      	RCALL _displayVal
+                 ; 0000 0126         }
+                 _0xAF:
+                 ; 0000 0127 
+                 ; 0000 0128         counter++;
+                +
+00029d 5f2f     +SUBI R18 , LOW ( - 1 )
+00029e 4f3f     +SBCI R19 , HIGH ( - 1 )
+                 	__ADDWRN 18,19,1
+                 ; 0000 0129         if(counter >= 16000) counter = 0;
+                +
+00029f 3820     +CPI R18 , LOW ( 16000 )
+0002a0 e3ee     +LDI R30 , HIGH ( 16000 )
+0002a1 073e     +CPC R19 , R30
+                 	__CPWRN 18,19,16000
+0002a2 f010      	BRLO _0xBC
+                +
+0002a3 e020     +LDI R18 , LOW ( 0 )
+0002a4 e030     +LDI R19 , HIGH ( 0 )
+                 	__GETWRN 18,19,0
+                 ; 0000 012A 
+                 ; 0000 012B         //PORTD.3 = !!(outputStates & 1);//0
+                 ; 0000 012C         //PORTD.4 = !!(outputStates & 2);//1
+                 ; 0000 012D         //if(!settingTarget){
+                 ; 0000 012E         //    displayVal(OCR0A);
+                 ; 0000 012F         //}else{
+                 ; 0000 0130         //    if(toggler)
+                 ; 0000 0131         //        displayVal(OCR0B);
+                 ; 0000 0132         //    else
+                 ; 0000 0133         //        displayVal(0);
+                 ; 0000 0134         //    toggler = !toggler;
+                 ; 0000 0135         //    delay_ms(LedDelay);
+                 ; 0000 0136         //}
+                 ; 0000 0137     };
+                 _0xBC:
+0002a5 cfaa      	RJMP _0x9F
+                 ; 0000 0138 }
+                 _0xBD:
+0002a6 cfff      	RJMP _0xBD
                  
                  	.DSEG
                  _idle_callback_G000:
@@ -2451,262 +2573,268 @@ C:\projects\soldering-iron-controller\soft\SolderIronController\List\SolderIronC
                  	.CSEG
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:22 WORDS
                  SUBOPT_0x0:
-000273 920a      	ST   -Y,R0
-000274 921a      	ST   -Y,R1
-000275 92fa      	ST   -Y,R15
-000276 936a      	ST   -Y,R22
-000277 937a      	ST   -Y,R23
-000278 938a      	ST   -Y,R24
-000279 939a      	ST   -Y,R25
-00027a 93aa      	ST   -Y,R26
-00027b 93ba      	ST   -Y,R27
-00027c 93ea      	ST   -Y,R30
-00027d 93fa      	ST   -Y,R31
-00027e b7ef      	IN   R30,SREG
-00027f 93ea      	ST   -Y,R30
-000280 9508      	RET
+0002a7 920a      	ST   -Y,R0
+0002a8 921a      	ST   -Y,R1
+0002a9 92fa      	ST   -Y,R15
+0002aa 936a      	ST   -Y,R22
+0002ab 937a      	ST   -Y,R23
+0002ac 938a      	ST   -Y,R24
+0002ad 939a      	ST   -Y,R25
+0002ae 93aa      	ST   -Y,R26
+0002af 93ba      	ST   -Y,R27
+0002b0 93ea      	ST   -Y,R30
+0002b1 93fa      	ST   -Y,R31
+0002b2 b7ef      	IN   R30,SREG
+0002b3 93ea      	ST   -Y,R30
+0002b4 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:4 WORDS
                  SUBOPT_0x1:
-000281 93e0 0084 	STS  _of_state_G000,R30
-000283 9508      	RET
+0002b5 93e0 0084 	STS  _of_state_G000,R30
+0002b7 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:2 WORDS
                  SUBOPT_0x2:
-000284 93e0 0085 	STS  _ss_state_G000,R30
-000286 9508      	RET
+0002b8 93e0 0085 	STS  _ss_state_G000,R30
+0002ba 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 16 TIMES, CODE SIZE REDUCTION:28 WORDS
                  SUBOPT_0x3:
-000287 e0f0      	LDI  R31,0
-000288 9508      	RET
+0002bb e0f0      	LDI  R31,0
+0002bc 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x4:
-000289 e0e0      	LDI  R30,LOW(0)
-00028a b9ef      	OUT  0xF,R30
-00028b 9508      	RET
+0002bd e0e0      	LDI  R30,LOW(0)
+0002be b9ef      	OUT  0xF,R30
+0002bf 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
                  SUBOPT_0x5:
-00028c e0a2      	LDI  R26,LOW(_settingTarget)
-00028d e0b0      	LDI  R27,HIGH(_settingTarget)
-00028e d06c      	RCALL __EEPROMRDB
-00028f 30e0      	CPI  R30,0
-000290 9508      	RET
+0002c0 e0a2      	LDI  R26,LOW(_settingTarget)
+0002c1 e0b0      	LDI  R27,HIGH(_settingTarget)
+0002c2 d070      	RCALL __EEPROMRDB
+0002c3 30e0      	CPI  R30,0
+0002c4 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:2 WORDS
                  SUBOPT_0x6:
-000291 dff5      	RCALL SUBOPT_0x3
-000292 d030      	RCALL __ASRW4
-000293 70e1      	ANDI R30,LOW(0x1)
-000294 9508      	RET
+0002c5 dff5      	RCALL SUBOPT_0x3
+0002c6 d028      	RCALL __ASRW4
+0002c7 70e1      	ANDI R30,LOW(0x1)
+0002c8 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:2 WORDS
                  SUBOPT_0x7:
-000295 2fae      	MOV  R26,R30
-000296 b3e6      	IN   R30,0x16
-000297 9508      	RET
+0002c9 2fae      	MOV  R26,R30
+0002ca b3e6      	IN   R30,0x16
+0002cb 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x8:
-000298 b3e6      	IN   R30,0x16
-000299 dfed      	RCALL SUBOPT_0x3
-00029a d02a      	RCALL __ASRW3
-00029b 70e1      	ANDI R30,LOW(0x1)
-00029c 9508      	RET
+0002cc b3e6      	IN   R30,0x16
+0002cd dfed      	RCALL SUBOPT_0x3
+0002ce d022      	RCALL __ASRW3
+0002cf 70e1      	ANDI R30,LOW(0x1)
+0002d0 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0x9:
-00029d dfe9      	RCALL SUBOPT_0x3
-00029e d028      	RCALL __ASRW2
-00029f d023      	RCALL __ASRW4
-0002a0 70e1      	ANDI R30,LOW(0x1)
-0002a1 9508      	RET
+0002d1 dfe9      	RCALL SUBOPT_0x3
+0002d2 d020      	RCALL __ASRW2
+0002d3 d01b      	RCALL __ASRW4
+0002d4 70e1      	ANDI R30,LOW(0x1)
+0002d5 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0xA:
-0002a2 9891      	CBI  0x12,1
-0002a3 98d9      	CBI  0x1B,1
-0002a4 98d8      	CBI  0x1B,0
-0002a5 9892      	CBI  0x12,2
-0002a6 9508      	RET
+0002d6 9891      	CBI  0x12,1
+0002d7 98d9      	CBI  0x1B,1
+0002d8 98d8      	CBI  0x1B,0
+0002d9 9892      	CBI  0x12,2
+0002da 9508      	RET
                  
                  ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:1 WORDS
                  SUBOPT_0xB:
-0002a7 9a90      	SBI  0x12,0
-0002a8 9a91      	SBI  0x12,1
-0002a9 9508      	RET
+0002db 9a96      	SBI  0x12,6
+0002dc 9a91      	SBI  0x12,1
+0002dd 9508      	RET
+                 
+                 ;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:4 WORDS
+                 SUBOPT_0xC:
+0002de 01d9      	MOVW R26,R18
+0002df e9e0      	LDI  R30,LOW(400)
+0002e0 e0f1      	LDI  R31,HIGH(400)
+0002e1 9508      	RET
                  
                  
                  	.CSEG
-                 _delay_ms:
-0002aa 91e9      	ld   r30,y+
-0002ab 91f9      	ld   r31,y+
-0002ac 9630      	adiw r30,0
-0002ad f039      	breq __delay_ms1
-                 __delay_ms0:
-                +
-0002ae ed80     +LDI R24 , LOW ( 0x7D0 )
-0002af e097     +LDI R25 , HIGH ( 0x7D0 )
-                +__DELAY_USW_LOOP :
-0002b0 9701     +SBIW R24 , 1
-0002b1 f7f1     +BRNE __DELAY_USW_LOOP
-                 	__DELAY_USW 0x7D0
-0002b2 95a8      	wdr
-0002b3 9731      	sbiw r30,1
-0002b4 f7c9      	brne __delay_ms0
-                 __delay_ms1:
-0002b5 9508      	ret
-                 
                  __ANEGW1:
-0002b6 95f1      	NEG  R31
-0002b7 95e1      	NEG  R30
-0002b8 40f0      	SBCI R31,0
-0002b9 9508      	RET
+0002e2 95f1      	NEG  R31
+0002e3 95e1      	NEG  R30
+0002e4 40f0      	SBCI R31,0
+0002e5 9508      	RET
                  
                  __ASRW12:
-0002ba 23ee      	TST  R30
-0002bb 2e0e      	MOV  R0,R30
-0002bc 01fd      	MOVW R30,R26
-0002bd f021      	BREQ __ASRW12R
+0002e6 23ee      	TST  R30
+0002e7 2e0e      	MOV  R0,R30
+0002e8 01fd      	MOVW R30,R26
+0002e9 f021      	BREQ __ASRW12R
                  __ASRW12L:
-0002be 95f5      	ASR  R31
-0002bf 95e7      	ROR  R30
-0002c0 940a      	DEC  R0
-0002c1 f7e1      	BRNE __ASRW12L
+0002ea 95f5      	ASR  R31
+0002eb 95e7      	ROR  R30
+0002ec 940a      	DEC  R0
+0002ed f7e1      	BRNE __ASRW12L
                  __ASRW12R:
-0002c2 9508      	RET
+0002ee 9508      	RET
                  
                  __ASRW4:
-0002c3 95f5      	ASR  R31
-0002c4 95e7      	ROR  R30
+0002ef 95f5      	ASR  R31
+0002f0 95e7      	ROR  R30
                  __ASRW3:
-0002c5 95f5      	ASR  R31
-0002c6 95e7      	ROR  R30
+0002f1 95f5      	ASR  R31
+0002f2 95e7      	ROR  R30
                  __ASRW2:
-0002c7 95f5      	ASR  R31
-0002c8 95e7      	ROR  R30
-0002c9 95f5      	ASR  R31
-0002ca 95e7      	ROR  R30
-0002cb 9508      	RET
+0002f3 95f5      	ASR  R31
+0002f4 95e7      	ROR  R30
+0002f5 95f5      	ASR  R31
+0002f6 95e7      	ROR  R30
+0002f7 9508      	RET
+                 
+                 __LTW12U:
+0002f8 17ae      	CP   R26,R30
+0002f9 07bf      	CPC  R27,R31
+0002fa e0e1      	LDI  R30,1
+0002fb f008      	BRLO __LTW12UT
+0002fc 27ee      	CLR  R30
+                 __LTW12UT:
+0002fd 9508      	RET
+                 
+                 __GTW12U:
+0002fe 17ea      	CP   R30,R26
+0002ff 07fb      	CPC  R31,R27
+000300 e0e1      	LDI  R30,1
+000301 f008      	BRLO __GTW12UT
+000302 27ee      	CLR  R30
+                 __GTW12UT:
+000303 9508      	RET
                  
                  __LNEGB1:
-0002cc 23ee      	TST  R30
-0002cd e0e1      	LDI  R30,1
-0002ce f009      	BREQ __LNEGB1F
-0002cf 27ee      	CLR  R30
+000304 23ee      	TST  R30
+000305 e0e1      	LDI  R30,1
+000306 f009      	BREQ __LNEGB1F
+000307 27ee      	CLR  R30
                  __LNEGB1F:
-0002d0 9508      	RET
+000308 9508      	RET
                  
                  __DIVW21U:
-0002d1 2400      	CLR  R0
-0002d2 2411      	CLR  R1
-0002d3 e190      	LDI  R25,16
+000309 2400      	CLR  R0
+00030a 2411      	CLR  R1
+00030b e190      	LDI  R25,16
                  __DIVW21U1:
-0002d4 0faa      	LSL  R26
-0002d5 1fbb      	ROL  R27
-0002d6 1c00      	ROL  R0
-0002d7 1c11      	ROL  R1
-0002d8 1a0e      	SUB  R0,R30
-0002d9 0a1f      	SBC  R1,R31
-0002da f418      	BRCC __DIVW21U2
-0002db 0e0e      	ADD  R0,R30
-0002dc 1e1f      	ADC  R1,R31
-0002dd c001      	RJMP __DIVW21U3
+00030c 0faa      	LSL  R26
+00030d 1fbb      	ROL  R27
+00030e 1c00      	ROL  R0
+00030f 1c11      	ROL  R1
+000310 1a0e      	SUB  R0,R30
+000311 0a1f      	SBC  R1,R31
+000312 f418      	BRCC __DIVW21U2
+000313 0e0e      	ADD  R0,R30
+000314 1e1f      	ADC  R1,R31
+000315 c001      	RJMP __DIVW21U3
                  __DIVW21U2:
-0002de 60a1      	SBR  R26,1
+000316 60a1      	SBR  R26,1
                  __DIVW21U3:
-0002df 959a      	DEC  R25
-0002e0 f799      	BRNE __DIVW21U1
-0002e1 01fd      	MOVW R30,R26
-0002e2 01d0      	MOVW R26,R0
-0002e3 9508      	RET
+000317 959a      	DEC  R25
+000318 f799      	BRNE __DIVW21U1
+000319 01fd      	MOVW R30,R26
+00031a 01d0      	MOVW R26,R0
+00031b 9508      	RET
                  
                  __DIVW21:
-0002e4 d004      	RCALL __CHKSIGNW
-0002e5 dfeb      	RCALL __DIVW21U
-0002e6 f40e      	BRTC __DIVW211
-0002e7 dfce      	RCALL __ANEGW1
+00031c d004      	RCALL __CHKSIGNW
+00031d dfeb      	RCALL __DIVW21U
+00031e f40e      	BRTC __DIVW211
+00031f dfc2      	RCALL __ANEGW1
                  __DIVW211:
-0002e8 9508      	RET
-                 
-                 __CHKSIGNW:
-0002e9 94e8      	CLT
-0002ea fff7      	SBRS R31,7
-0002eb c002      	RJMP __CHKSW1
-0002ec dfc9      	RCALL __ANEGW1
-0002ed 9468      	SET
-                 __CHKSW1:
-0002ee ffb7      	SBRS R27,7
-0002ef c006      	RJMP __CHKSW2
-0002f0 95a0      	COM  R26
-0002f1 95b0      	COM  R27
-0002f2 9611      	ADIW R26,1
-0002f3 f800      	BLD  R0,0
-0002f4 9403      	INC  R0
-0002f5 fa00      	BST  R0,0
-                 __CHKSW2:
-0002f6 9508      	RET
-                 
-                 __EEPROMRDW:
-0002f7 9611      	ADIW R26,1
-0002f8 d002      	RCALL __EEPROMRDB
-0002f9 2ffe      	MOV  R31,R30
-0002fa 9711      	SBIW R26,1
-                 
-                 __EEPROMRDB:
-0002fb 99e1      	SBIC EECR,EEWE
-0002fc cffe      	RJMP __EEPROMRDB
-0002fd 93ff      	PUSH R31
-0002fe b7ff      	IN   R31,SREG
-0002ff 94f8      	CLI
-000300 bbae      	OUT  EEARL,R26
-000301 9ae0      	SBI  EECR,EERE
-000302 b3ed      	IN   R30,EEDR
-000303 bfff      	OUT  SREG,R31
-000304 91ff      	POP  R31
-000305 9508      	RET
-                 
-                 __EEPROMWRW:
-000306 d007      	RCALL __EEPROMWRB
-000307 9611      	ADIW R26,1
-000308 93ef      	PUSH R30
-000309 2fef      	MOV  R30,R31
-00030a d003      	RCALL __EEPROMWRB
-00030b 91ef      	POP  R30
-00030c 9711      	SBIW R26,1
-00030d 9508      	RET
-                 
-                 __EEPROMWRB:
-00030e 9be1      	SBIS EECR,EEWE
-00030f c002      	RJMP __EEPROMWRB1
-000310 95a8      	WDR
-000311 cffc      	RJMP __EEPROMWRB
-                 __EEPROMWRB1:
-000312 b79f      	IN   R25,SREG
-000313 94f8      	CLI
-000314 bbae      	OUT  EEARL,R26
-000315 9ae0      	SBI  EECR,EERE
-000316 b38d      	IN   R24,EEDR
-000317 17e8      	CP   R30,R24
-000318 f019      	BREQ __EEPROMWRB0
-000319 bbed      	OUT  EEDR,R30
-00031a 9ae2      	SBI  EECR,EEMWE
-00031b 9ae1      	SBI  EECR,EEWE
-                 __EEPROMWRB0:
-00031c bf9f      	OUT  SREG,R25
-00031d 9508      	RET
-                 
-                 __SAVELOCR2:
-00031e 931a      	ST   -Y,R17
-00031f 930a      	ST   -Y,R16
 000320 9508      	RET
                  
+                 __CHKSIGNW:
+000321 94e8      	CLT
+000322 fff7      	SBRS R31,7
+000323 c002      	RJMP __CHKSW1
+000324 dfbd      	RCALL __ANEGW1
+000325 9468      	SET
+                 __CHKSW1:
+000326 ffb7      	SBRS R27,7
+000327 c006      	RJMP __CHKSW2
+000328 95a0      	COM  R26
+000329 95b0      	COM  R27
+00032a 9611      	ADIW R26,1
+00032b f800      	BLD  R0,0
+00032c 9403      	INC  R0
+00032d fa00      	BST  R0,0
+                 __CHKSW2:
+00032e 9508      	RET
+                 
+                 __EEPROMRDW:
+00032f 9611      	ADIW R26,1
+000330 d002      	RCALL __EEPROMRDB
+000331 2ffe      	MOV  R31,R30
+000332 9711      	SBIW R26,1
+                 
+                 __EEPROMRDB:
+000333 99e1      	SBIC EECR,EEWE
+000334 cffe      	RJMP __EEPROMRDB
+000335 93ff      	PUSH R31
+000336 b7ff      	IN   R31,SREG
+000337 94f8      	CLI
+000338 bbae      	OUT  EEARL,R26
+000339 9ae0      	SBI  EECR,EERE
+00033a b3ed      	IN   R30,EEDR
+00033b bfff      	OUT  SREG,R31
+00033c 91ff      	POP  R31
+00033d 9508      	RET
+                 
+                 __EEPROMWRW:
+00033e d007      	RCALL __EEPROMWRB
+00033f 9611      	ADIW R26,1
+000340 93ef      	PUSH R30
+000341 2fef      	MOV  R30,R31
+000342 d003      	RCALL __EEPROMWRB
+000343 91ef      	POP  R30
+000344 9711      	SBIW R26,1
+000345 9508      	RET
+                 
+                 __EEPROMWRB:
+000346 9be1      	SBIS EECR,EEWE
+000347 c002      	RJMP __EEPROMWRB1
+000348 95a8      	WDR
+000349 cffc      	RJMP __EEPROMWRB
+                 __EEPROMWRB1:
+00034a b79f      	IN   R25,SREG
+00034b 94f8      	CLI
+00034c bbae      	OUT  EEARL,R26
+00034d 9ae0      	SBI  EECR,EERE
+00034e b38d      	IN   R24,EEDR
+00034f 17e8      	CP   R30,R24
+000350 f019      	BREQ __EEPROMWRB0
+000351 bbed      	OUT  EEDR,R30
+000352 9ae2      	SBI  EECR,EEMWE
+000353 9ae1      	SBI  EECR,EEWE
+                 __EEPROMWRB0:
+000354 bf9f      	OUT  SREG,R25
+000355 9508      	RET
+                 
+                 __SAVELOCR2:
+000356 931a      	ST   -Y,R17
+000357 930a      	ST   -Y,R16
+000358 9508      	RET
+                 
                  __LOADLOCR2P:
-000321 9109      	LD   R16,Y+
-000322 9119      	LD   R17,Y+
-000323 9508      	RET
+000359 9109      	LD   R16,Y+
+00035a 9119      	LD   R17,Y+
+00035b 9508      	RET
                  
                  ;END OF CODE MARKER
                  __END_OF_CODE:
@@ -2727,40 +2855,40 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 ATtiny2313 register use summary:
-r0 :  16 r1 :   7 r2 :   0 r3 :   0 r4 :   6 r5 :   7 r6 :   0 r7 :   0 
+r0 :  16 r1 :   7 r2 :   0 r3 :   0 r4 :   6 r5 :   9 r6 :   0 r7 :   0 
 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 r13:   0 r14:   0 r15:   2 
-r16:  17 r17:  19 r18:   0 r19:   0 r20:   0 r21:   0 r22:   4 r23:   2 
-r24:  13 r25:   8 r26:  63 r27:  13 r28:   5 r29:   0 r30: 264 r31:  41 
-x  :   3 y  :  47 z  :   9 
-Registers used: 19 out of 35 (54.3%)
+r16:  17 r17:  16 r18:   7 r19:   6 r20:   0 r21:   0 r22:   4 r23:   2 
+r24:  11 r25:   7 r26:  66 r27:  15 r28:   5 r29:   0 r30: 281 r31:  41 
+x  :   3 y  :  42 z  :   9 
+Registers used: 21 out of 35 (60.0%)
 
 ATtiny2313 instruction use summary:
 .lds  :   0 .lds.l:   0 .sts  :   0 .sts.l:   0 adc   :   1 add   :   1 
-adiw  :   7 and   :   1 andi  :  14 asr   :   6 bclr  :   0 bld   :   1 
-brbc  :   0 brbs  :   0 brcc  :   1 brcs  :   0 break :   0 breq  :  16 
-brge  :   0 brhc  :   0 brhs  :   0 brid  :   0 brie  :   0 brlo  :   5 
-brlt  :   0 brmi  :   0 brne  :  28 brpl  :   0 brsh  :   4 brtc  :   1 
-brts  :   0 brvc  :   0 brvs  :   0 bset  :   0 bst   :   1 cbi   :  20 
-cbr   :   1 clc   :   0 clh   :   0 cli   :   3 cln   :   0 clr   :   6 
-cls   :   0 clt   :   1 clv   :   0 clz   :   0 com   :   2 cp    :   8 
-cpc   :  10 cpi   :  27 cpse  :   0 dec   :   4 des   :   0 eor   :   0 
-fmul  :   0 fmuls :   0 fmulsu:   0 icall :   0 ijmp  :   0 in    :  28 
-inc   :   1 ld    :  20 ldd   :   5 ldi   : 101 lds   :   7 lpm   :   7 
-lsl   :   1 lsr   :   0 mov   :  20 movw  :   8 mul   :   0 muls  :   0 
+adiw  :   6 and   :   1 andi  :  14 asr   :   6 bclr  :   0 bld   :   1 
+brbc  :   0 brbs  :   0 brcc  :   1 brcs  :   0 break :   0 breq  :  14 
+brge  :   0 brhc  :   0 brhs  :   0 brid  :   0 brie  :   0 brlo  :  12 
+brlt  :   0 brmi  :   0 brne  :  29 brpl  :   0 brsh  :   4 brtc  :   1 
+brts  :   0 brvc  :   0 brvs  :   0 bset  :   0 bst   :   1 cbi   :  24 
+cbr   :   1 clc   :   0 clh   :   0 cli   :   3 cln   :   0 clr   :   8 
+cls   :   0 clt   :   1 clv   :   0 clz   :   0 com   :   2 cp    :  10 
+cpc   :  15 cpi   :  34 cpse  :   0 dec   :   4 des   :   0 eor   :   0 
+fmul  :   0 fmuls :   0 fmulsu:   0 icall :   0 ijmp  :   0 in    :  32 
+inc   :   1 ld    :  18 ldd   :   4 ldi   : 109 lds   :   7 lpm   :   7 
+lsl   :   1 lsr   :   0 mov   :  18 movw  :   9 mul   :   0 muls  :   0 
 mulsu :   0 neg   :   2 nop   :   0 or    :   4 ori   :   1 out   :  62 
-pop   :   2 push  :   2 rcall : 119 ret   :  47 reti  :   1 rjmp  :  76 
-rol   :   3 ror   :   6 sbc   :   1 sbci  :   2 sbi   :  22 sbic  :   3 
-sbis  :   4 sbiw  :  10 sbr   :   1 sbrc  :   2 sbrs  :   2 sec   :   0 
+pop   :   2 push  :   2 rcall : 125 ret   :  49 reti  :   1 rjmp  :  87 
+rol   :   3 ror   :   6 sbc   :   1 sbci  :   3 sbi   :  25 sbic  :   3 
+sbis  :   4 sbiw  :   8 sbr   :   1 sbrc  :   2 sbrs  :   4 sec   :   0 
 seh   :   0 sei   :   1 sen   :   0 ser   :   0 ses   :   0 set   :   1 
-sev   :   0 sez   :   0 sleep :   0 spm   :   0 st    :  26 std   :   1 
-sts   :   5 sub   :   1 subi  :   9 swap  :   0 tst   :   2 wdr   :   2 
+sev   :   0 sez   :   0 sleep :   0 spm   :   0 st    :  24 std   :   1 
+sts   :   5 sub   :   1 subi  :  12 swap  :   0 tst   :   2 wdr   :   1 
 
 Instructions used: 64 out of 114 (56.1%)
 
 ATtiny2313 memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x000648   1598     10   1608    2048  78.5%
+[.cseg] 0x000000 0x0006b8   1710     10   1720    2048  84.0%
 [.dseg] 0x000060 0x0000aa      0     42     42     128  32.8%
 [.eseg] 0x000000 0x000003      0      3      3     128   2.3%
 

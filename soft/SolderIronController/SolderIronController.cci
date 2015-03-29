@@ -1,4 +1,4 @@
-VERSION:3 SOURCE_TIMESTAMP:4679BA0C
+VERSION:3 SOURCE_TIMESTAMP:467DADD2
 NODE:I LEVEL:0 LINE:23 "C:\cvavr2\inc\tiny2313.h"
 NODE:I LEVEL:0 LINE:24 "C:\cvavr2\inc\stdint.h"
 NODE:I LEVEL:0 LINE:25 "ui.c"
@@ -29,4 +29,4 @@ NODE:F LEVEL:0 LINE:144 "setOut2StateTo(ui8 isOn)"
 NODE:F LEVEL:0 LINE:150 "toggleOut2State(void)"
 NODE:F LEVEL:0 LINE:156 "pin_change_isr0(void)"
 NODE:F LEVEL:0 LINE:181 "displayVal(ui8 val)"
-NODE:F LEVEL:0 LINE:236 "main(void)"
+NODE:F LEVEL:0 LINE:243 "main(void)"
